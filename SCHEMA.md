@@ -3,7 +3,7 @@
 
 ---
 
-## Module 1 — Auth & Users
+## Module 1 — Auth
 
 ### Endpoints
 | Method | Path | Auth | Description |
@@ -12,8 +12,37 @@
 | POST | `/auth/login` | 🔓 Public | Authenticate, return JWT |
 | POST | `/auth/reset-password` | 🔓 Public | Initiate password reset (delegates to Supabase built-in email link flow) |
 | PUT | `/auth/change-password` | 🔒 JWT | Update password |
+
+### DTOs
+
+**RegisterDto**
+```ts
+email: string        // valid email
+password: string     // min 8 chars
+```
+
+**LoginDto**
+```ts
+email: string
+password: string
+```
+
+**ChangePasswordDto**
+```ts
+currentPassword: string
+newPassword: string  // min 8 chars
+```
+
+---
+
+## Module 2 — Users
+
+### Endpoints
+| Method | Path | Auth | Description |
+|---|---|---|---|
 | GET | `/users/me` | 🔒 JWT | Get current user profile |
 | PUT | `/users/me` | 🔒 JWT | Update account details |
+| DELETE | `/users/delete-account` | 🔒 JWT | Delete account |
 
 ### DTOs
 
@@ -42,7 +71,7 @@ email?: string       // optional
 
 ---
 
-## Module 2 — Sites (Portfolio CRUD)
+## Module 3 — Sites (Portfolio CRUD)
 
 ### Endpoints
 | Method | Path | Auth | Description |
@@ -91,7 +120,7 @@ achievements?: object[]// needs @ValidateNested() in implementation
 
 ---
 
-## Module 3 — Storage
+## Module 4 — Storage
 
 ### Endpoints
 | Method | Path | Auth | Description |
@@ -107,7 +136,7 @@ achievements?: object[]// needs @ValidateNested() in implementation
 
 ---
 
-## Module 4 — AI Analyzer
+## Module 5 — AI Analyzer
 
 ### Endpoints
 | Method | Path | Auth | Description |
@@ -165,7 +194,7 @@ Returns a partial `CreateSiteDto` — only fields Gemini could extract from the 
 
 ---
 
-## Module 5 — Generator
+## Module 6 — Generator
 
 ### Endpoints
 | Method | Path | Auth | Description |
