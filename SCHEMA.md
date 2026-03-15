@@ -103,19 +103,19 @@ updatedAt: timestamp
 
 ### DTOs
 
-**CreateSiteDto / UpdateSiteDto**
+**CreateSiteDto** — all fields optional. **UpdateSiteDto** = `PartialType(CreateSiteDto)`.
 ```ts
 fullName?: string
 jobTitle?: string
 location?: string
 bio?: string
-avatarUrl?: string
-contacts?: object      // needs @ValidateNested() in implementation
+avatarUrl?: string        // @IsUrl
+contacts?: ContactDto     // { email?, phone?, linkedin?, github?, website? }
 skills?: string[]
-experience?: object[]  // needs @ValidateNested() in implementation
-education?: object[]   // needs @ValidateNested() in implementation
-projects?: object[]    // needs @ValidateNested() in implementation
-achievements?: object[]// needs @ValidateNested() in implementation
+experience?: ExperienceDto[]  // { company, role, startDate, endDate?, description? }
+education?: EducationDto[]    // { institution, degree, startDate, endDate? }
+projects?: ProjectDto[]       // { name, description?, url?, imageUrl? }
+achievements?: AchievementDto[] // { title, description? }
 ```
 
 ---

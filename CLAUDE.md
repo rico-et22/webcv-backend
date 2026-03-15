@@ -152,3 +152,4 @@ When asked to implement a module, always follow this order:
 - Use NestJS built-in `Logger` for logging, never `console.log`.
 - Environment variables must be accessed via a `ConfigService` — never `process.env` directly in business logic.
 - All database queries must be scoped to the authenticated user's ID to prevent cross-user data access.
+- ALWAYS use `pnpm` for package management.
