@@ -17,7 +17,7 @@ export class SitesService {
   // ------------------------------------------------------------------ helpers
 
   /** Map camelCase DTO fields to snake_case DB columns */
-  private toDbRow(dto: CreateSiteDto): Record<string, unknown> {
+  private toDbRow(dto: Partial<CreateSiteDto>): Record<string, unknown> {
     const row: Record<string, unknown> = {};
     if (dto.fullName !== undefined) row.full_name = dto.fullName;
     if (dto.jobTitle !== undefined) row.job_title = dto.jobTitle;

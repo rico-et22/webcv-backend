@@ -103,9 +103,9 @@ updatedAt: timestamp
 
 ### DTOs
 
-**CreateSiteDto** — all fields optional. **UpdateSiteDto** = `PartialType(CreateSiteDto)`.
+**CreateSiteDto** — `fullName` required, all other fields optional. **UpdateSiteDto** = `PartialType(CreateSiteDto)` (all fields optional).
 ```ts
-fullName?: string
+fullName: string          // required
 jobTitle?: string
 location?: string
 bio?: string

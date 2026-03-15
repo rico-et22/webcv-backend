@@ -1,7 +1,8 @@
-import { ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import {
   IsArray,
+  IsNotEmpty,
   IsOptional,
   IsString,
   IsUrl,
@@ -14,10 +15,10 @@ import { ExperienceDto } from './experience.dto';
 import { ProjectDto } from './project.dto';
 
 export class CreateSiteDto {
-  @ApiPropertyOptional({ example: 'Kamil Pawlak' })
-  @IsOptional()
+  @ApiProperty({ example: 'Kamil Pawlak' })
+  @IsNotEmpty()
   @IsString()
-  fullName?: string;
+  fullName: string;
 
   @ApiPropertyOptional({ example: 'Full-Stack Developer' })
   @IsOptional()
