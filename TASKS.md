@@ -34,3 +34,10 @@
 - [ ] `GeneratorController` + `GeneratorService` (ZIP streaming)
 - [ ] GitHub push (optional)
 - [ ] Review checkpoint
+
+## Finalization
+- [ ] Dockerization (`Dockerfile` + `docker-compose.yml`)
+- [ ] `.env.example` with all required keys listed
+- [ ] Environment validation on startup (Zod schema via `@nestjs/config`)
+- [ ] `README.md` — tech stack, local dev setup, Docker setup, initial Supabase setup (buckets, SQL migrations), Resend SMTP configuration
+- [ ] GitHub Actions CI — install, lint, build
