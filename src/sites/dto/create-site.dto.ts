@@ -40,6 +40,11 @@ export class CreateSiteDto {
   @IsUrl()
   avatarUrl?: string;
 
+  @ApiPropertyOptional({ example: 'user-id/site-id/avatar.png' })
+  @IsOptional()
+  @IsString()
+  avatarStoragePath?: string;
+
   @ApiPropertyOptional({ type: () => ContactDto })
   @IsOptional()
   @ValidateNested()

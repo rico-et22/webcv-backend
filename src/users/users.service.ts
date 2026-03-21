@@ -10,7 +10,7 @@ export class UsersService {
 
   async getMe(userId: string) {
     const { data, error } =
-      await this.supabaseService.supabase.auth.admin.getUserById(userId);
+      await this.supabaseService.supabaseAdmin.auth.admin.getUserById(userId);
 
     if (error || !data.user) {
       this.logger.warn(`User not found: ${userId}`);
@@ -21,7 +21,7 @@ export class UsersService {
   }
 
   async update(userId: string, dto: UpdateUserDto) {
-    const { data, error } = await this.supabaseService.supabase.auth.admin.updateUserById(userId, {
+    const { data, error } = await this.supabaseService.supabaseAdmin.auth.admin.updateUserById(userId, {
       email: dto.email,
     });
 
@@ -36,7 +36,7 @@ export class UsersService {
   }
 
   async deleteAccount(userId: string) {
-    const { error } = await this.supabaseService.supabase.auth.admin.deleteUser(userId);
+    const { error } = await this.supabaseService.supabaseAdmin.auth.admin.deleteUser(userId);
 
     if (error) {
       this.logger.error(`Error deleting user ${userId}: ${error.message}`);

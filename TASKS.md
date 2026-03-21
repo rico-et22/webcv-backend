@@ -22,8 +22,8 @@
 - [x] Review checkpoint
 
 ## Module 4 — Storage
-- [ ] `StorageController` + `StorageService`
-- [ ] Review checkpoint
+- [x] `StorageController` + `StorageService`
+- [x] Review checkpoint
 
 ## Module 5 — AI Analyzer
 - [ ] `AiController` + `AiService`

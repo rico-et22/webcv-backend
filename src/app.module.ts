@@ -8,6 +8,7 @@ import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { SupabaseModule } from './supabase/supabase.module';
 import { SitesModule } from './sites/sites.module';
+import { StorageModule } from './storage/storage.module';
 import { UsersModule } from './users/users.module';
 
 @Module({
@@ -17,6 +18,7 @@ import { UsersModule } from './users/users.module';
     AuthModule,
     UsersModule,
     SitesModule,
+    StorageModule,
   ],
   controllers: [AppController],
   providers: [

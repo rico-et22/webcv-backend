@@ -21,4 +21,9 @@ export class ProjectDto {
   @IsOptional()
   @IsUrl()
   imageUrl?: string;
+
+  @ApiPropertyOptional({ example: '50b61a6d-37d2-473c-a00b-b2da9d1caf9b/22de84be-e6ab-4fbb-9a58-a132f51fb97c/1774082008960.png' })
+  @IsOptional()
+  @IsString()
+  imageStoragePath?: string;
 }

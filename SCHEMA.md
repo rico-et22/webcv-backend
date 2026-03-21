@@ -90,12 +90,13 @@ fullName: string
 jobTitle: string
 location: string
 bio: string
-avatarUrl: string    // Supabase Storage public URL
+avatarUrl: string            // Supabase Storage public URL
+avatarStoragePath: string    // Supabase Storage path, used for deletion
 contacts: json       // { email?, phone?, linkedin?, github?, website? }
 skills: string[]
 experience: json[]   // [{ company, role, startDate, endDate, description }]
 education: json[]    // [{ institution, degree, startDate, endDate }]
-projects: json[]     // [{ name, description, url, imageUrl }]
+projects: json[]     // [{ name, description, url, imageUrl, imageStoragePath }]
 achievements: json[] // [{ title, description }]
 createdAt: timestamp
 updatedAt: timestamp
@@ -109,12 +110,13 @@ fullName: string          // required
 jobTitle?: string
 location?: string
 bio?: string
-avatarUrl?: string        // @IsUrl
+avatarUrl?: string            // @IsUrl
+avatarStoragePath?: string    // returned by POST /storage/avatar/:siteId
 contacts?: ContactDto     // { email?, phone?, linkedin?, github?, website? }
 skills?: string[]
 experience?: ExperienceDto[]  // { company, role, startDate, endDate?, description? }
 education?: EducationDto[]    // { institution, degree, startDate, endDate? }
-projects?: ProjectDto[]       // { name, description?, url?, imageUrl? }
+projects?: ProjectDto[]       // { name, description?, url?, imageUrl?, imageStoragePath? }
 achievements?: AchievementDto[] // { title, description? }
 ```
 
@@ -125,14 +127,23 @@ achievements?: AchievementDto[] // { title, description? }
 ### Endpoints
 | Method | Path | Auth | Description |
 |---|---|---|---|
-| POST | `/storage/upload` | 🔒 JWT | Upload image, return `{ url, fileId }` |
-| DELETE | `/storage/:fileId` | 🔒 JWT | Delete image from Supabase Storage |
+| POST | `/storage/avatar/:siteId` | 🔒 JWT | Upload or replace the avatar for a portfolio site (ownership verified) |
+| POST | `/storage/screenshot/:siteId` | 🔒 JWT | Upload a screenshot for a portfolio site (ownership verified) |
+| DELETE | `/storage/file` | 🔒 JWT | Delete a file by `{ bucket, path }` |
 
 ### Notes
-- Accepted MIME types: `image/jpeg`, `image/png`, `image/webp`
-- Max file size: **5MB**
-- Files stored under `userId/filename` path in Supabase Storage bucket
-- `fileId` = the Supabase Storage path (`userId/filename`), returned by the upload endpoint
+- Accepted MIME types: `image/jpeg`, `image/png`, `image/webp`, `image/gif`
+- Max file size: **50 MB** (enforced in code)
+- Buckets: `avatars` (avatar per site), `screenshots` (project images per site)
+- Upload responses return `{ url, storagePath }` — store `storagePath` on the resource (e.g. `projects[].imageStoragePath`) to enable future deletion
+- Avatar path is deterministic: `{userId}/{siteId}/avatar.{ext}` (upsert)
+- Screenshot path includes timestamp: `{userId}/{siteId}/{timestamp}.{ext}`
+
+### Supabase Client Usage
+Storage calls use a **per-request client** scoped to the user's JWT (`clientForUser(jwt)`) so that Supabase Storage RLS bucket policies are enforced natively. DB queries within StorageService (e.g. ownership check on `sites`) use `supabaseAdmin`.
+
+### RLS Setup
+Bucket policies live in `supabase/migrations/storage_rls_policies.sql` — **must be applied manually in the Supabase SQL Editor** when setting up a new environment. Without them, storage bucket access is unrestricted.
 
 ---
 
