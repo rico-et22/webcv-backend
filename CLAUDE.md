@@ -65,7 +65,7 @@ src/
     interceptors/
   supabase/
     supabase.module.ts
-    supabase.service.ts       ← singleton Supabase client
+    supabase.service.ts       ← three clients: supabase (anon), supabaseAdmin (service role), clientForUser(jwt)
 ```
 
 ---
@@ -130,10 +130,25 @@ Use a global `HttpExceptionFilter` to ensure all errors follow this shape.
 ---
 
 ## Supabase Client
-- Instantiate a single Supabase client in `supabase/supabase.service.ts`.
-- Export it as a provider from `supabase/supabase.module.ts`.
-- Import `SupabaseModule` in any module that needs DB, Storage, or Auth access.
-- Never instantiate the Supabase client directly inside controllers or services.
+`SupabaseService` exposes three clients — never instantiate Supabase directly in controllers or services, always import `SupabaseModule`:
+
+| Client | Key | Use for |
+|---|---|---|
+| `supabase` | anon key | Auth operations only (`signUp`, `signInWithPassword`, `resetPasswordForEmail`) |
+| `supabaseAdmin` | service role key | All DB queries — bypasses RLS, ownership enforced in application code |
+| `clientForUser(jwt)` | anon key + user JWT header | Supabase Storage calls — RLS enforced by bucket policies |
+
+**Why this separation matters:** calling `auth.signInWithPassword` on a client mutates its internal session. If the same client is used for DB queries, subsequent queries run under the last logged-in user's RLS context — causing cross-user data leaks. Keeping auth and DB clients separate eliminates this entirely.
+
+- `auth.admin.*` methods require service role → always use `supabaseAdmin`
+- Storage controllers must extract the JWT from `Authorization` header and pass it to the service for `clientForUser(jwt)`
+
+### Storage RLS Policies
+Bucket-level RLS policies are defined in `supabase/migrations/storage_rls_policies.sql` and must be applied manually in the Supabase SQL Editor when setting up a new environment. They enforce:
+- `avatars` bucket — authenticated users can upload/update/delete only under their own `userId/` folder; public read
+- `screenshots` bucket — authenticated users can upload/delete only under their own `userId/` folder; public read
+
+These policies are the **second layer** of ownership enforcement for storage. The first layer is application-level code in `StorageService`. Both layers must remain in sync.
 
 ---
 

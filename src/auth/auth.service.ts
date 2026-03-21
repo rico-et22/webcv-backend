@@ -81,7 +81,7 @@ export class AuthService {
 
     // Step 2: Update to new password using admin API
     const { error: updateError } =
-      await this.supabaseService.supabase.auth.admin.updateUserById(userId, {
+      await this.supabaseService.supabaseAdmin.auth.admin.updateUserById(userId, {
         password: dto.newPassword,
       });
 

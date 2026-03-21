@@ -24,6 +24,7 @@ export class SitesService {
     if (dto.location !== undefined) row.location = dto.location;
     if (dto.bio !== undefined) row.bio = dto.bio;
     if (dto.avatarUrl !== undefined) row.avatar_url = dto.avatarUrl;
+    if (dto.avatarStoragePath !== undefined) row.avatar_storage_path = dto.avatarStoragePath;
     if (dto.contacts !== undefined) row.contacts = dto.contacts;
     if (dto.skills !== undefined) row.skills = dto.skills;
     if (dto.experience !== undefined) row.experience = dto.experience;
@@ -36,7 +37,7 @@ export class SitesService {
   // ------------------------------------------------------------------ create
 
   async create(userId: string, dto: CreateSiteDto) {
-    const { data, error } = await this.supabaseService.supabase
+    const { data, error } = await this.supabaseService.supabaseAdmin
       .from('sites')
       .insert({ ...this.toDbRow(dto), user_id: userId })
       .select()
@@ -53,7 +54,7 @@ export class SitesService {
   // ------------------------------------------------------------------ findAll
 
   async findAll(userId: string) {
-    const { data, error } = await this.supabaseService.supabase
+    const { data, error } = await this.supabaseService.supabaseAdmin
       .from('sites')
       .select('*')
       .eq('user_id', userId)
@@ -70,7 +71,7 @@ export class SitesService {
   // ------------------------------------------------------------------ findOne
 
   async findOne(userId: string, id: string) {
-    const { data, error } = await this.supabaseService.supabase
+    const { data, error } = await this.supabaseService.supabaseAdmin
       .from('sites')
       .select('*')
       .eq('id', id)
@@ -93,7 +94,7 @@ export class SitesService {
     // Verify ownership first
     await this.findOne(userId, id);
 
-    const { data, error } = await this.supabaseService.supabase
+    const { data, error } = await this.supabaseService.supabaseAdmin
       .from('sites')
       .update({ ...this.toDbRow(dto), updated_at: new Date().toISOString() })
       .eq('id', id)
@@ -115,7 +116,7 @@ export class SitesService {
     // Verify ownership first (throws 403 if mismatched, 404 if not found)
     await this.findOne(userId, id);
 
-    const { error } = await this.supabaseService.supabase
+    const { error } = await this.supabaseService.supabaseAdmin
       .from('sites')
       .delete()
       .eq('id', id)
