@@ -11,7 +11,8 @@
 | POST | `/auth/register` | 🔓 Public | Create a new user |
 | POST | `/auth/login` | 🔓 Public | Authenticate, return JWT |
 | POST | `/auth/reset-password` | 🔓 Public | Initiate password reset (delegates to Supabase built-in email link flow) |
-| PUT | `/auth/change-password` | 🔒 JWT | Update password |
+| PUT | `/auth/confirm-reset` | 🔓 Public | Complete password reset using token from reset email |
+| PUT | `/auth/change-password` | 🔒 JWT | Update password (requires current password) |
 
 ### DTOs
 
@@ -211,7 +212,7 @@ Returns a partial `CreateSiteDto` — only fields Gemini could extract from the 
 | Method | Path | Auth | Description |
 |---|---|---|---|
 | GET | `/generator/zip/:siteId` | 🔒 JWT | Download portfolio as static ZIP |
-| POST | `/generator/github/:siteId` | 🔒 JWT | Push static site to GitHub Pages (optional) |
+| GET | `/generator/preview/:siteId` | 🔒 JWT | Return single self-contained HTML preview |
 
 ### ZIP Endpoint
 - Verifies ownership → `403` on mismatch
@@ -232,8 +233,28 @@ portfolio.zip
   assets/       ← placeholder, images referenced via Supabase URLs
 ```
 
-### GitHub Endpoint (Optional)
-- Input: `{ repoName, githubToken }` in request body
+### Live Preview Endpoint
+- Verifies ownership → `403` on mismatch
+- Generates a **single, self-contained `index.html`** — CSS and JS inlined with `<style>` / `<script>` tags, images referenced via Supabase public URLs
+- Served directly in the browser (no download, no ZIP)
+- Response headers:
+```
+Content-Type: text/html; charset=utf-8
+```
+
+---
+
+## Module 6 Extension — GitHub Integration (Optional)
+
+> Extends the Generator module. Requires `octokit` dependency. Not part of the core Generator implementation.
+
+### Endpoint
+| Method | Path | Auth | Description |
+|---|---|---|---|
+| POST | `/generator/github/:siteId` | 🔒 JWT | Push generated static site to GitHub Pages |
+
+### Notes
+- Input body: `{ repoName, githubToken }`
   - `repoName`: just the repo name (e.g. `my-portfolio`), not `username/repo`
   - `githubToken`: used in-request only, **never stored or logged**
 - Uses `octokit` to push generated files to a GitHub repo

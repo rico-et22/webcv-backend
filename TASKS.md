@@ -32,8 +32,11 @@
 
 ## Module 6 — Generator
 - [ ] `GeneratorController` + `GeneratorService` (ZIP streaming)
-- [ ] GitHub push (optional)
+- [ ] Live preview endpoint (`GET /generator/preview/:siteId`) — single self-contained HTML file, inline CSS/JS, served directly
 - [ ] Review checkpoint
+
+## Module 6 Extension — GitHub Integration (Optional)
+- [ ] `POST /generator/github/:siteId` — push generated site to GitHub Pages via `octokit`
 
 ## Finalization
 - [ ] Dockerization (`Dockerfile` + `docker-compose.yml`)
