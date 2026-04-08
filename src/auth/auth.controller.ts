@@ -8,6 +8,7 @@ import {
 import { Public } from '../common/decorators/public.decorator';
 import { AuthService } from './auth.service';
 import { ChangePasswordDto } from './dto/change-password.dto';
+import { ConfirmResetDto } from './dto/confirm-reset.dto';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
@@ -43,6 +44,17 @@ export class AuthController {
   @ApiResponse({ status: 400, description: 'Invalid email' })
   resetPassword(@Body() dto: ResetPasswordDto) {
     return this.authService.resetPassword(dto);
+  }
+
+  @Public()
+  @Put('confirm-reset')
+  @HttpCode(200)
+  @ApiOperation({ summary: 'Complete password reset using the token from the reset email link' })
+  @ApiResponse({ status: 200, description: 'Password reset successfully' })
+  @ApiResponse({ status: 401, description: 'Invalid or expired reset token' })
+  @ApiResponse({ status: 400, description: 'Validation error' })
+  confirmReset(@Body() dto: ConfirmResetDto) {
+    return this.authService.confirmReset(dto);
   }
 
   @Put('change-password')
