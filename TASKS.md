@@ -26,9 +26,9 @@
 - [x] Review checkpoint
 
 ## Module 5 — AI Analyzer
-- [ ] `AiController` + `AiService`
-- [ ] Rate limiting / cooldown logic
-- [ ] Review checkpoint
+- [x] `AiController` + `AiService`
+- [x] Rate limiting / cooldown logic
+- [x] Review checkpoint
 
 ## Module 6 — Generator
 - [ ] `GeneratorController` + `GeneratorService` (ZIP streaming)
