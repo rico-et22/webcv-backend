@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { SupabaseService } from '../supabase/supabase.service';
 import { ChangePasswordDto } from './dto/change-password.dto';
+import { ConfirmResetDto } from './dto/confirm-reset.dto';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
@@ -65,6 +66,28 @@ export class AuthService {
 
     // Always return a generic message to avoid email enumeration
     return { data: null, message: 'If this email is registered, a reset link has been sent.' };
+  }
+
+  async confirmReset(dto: ConfirmResetDto) {
+    // Validate the recovery token and extract the user
+    const { data, error } = await this.supabaseService.supabase.auth.getUser(dto.accessToken);
+
+    if (error || !data.user) {
+      throw new UnauthorizedException('Invalid or expired reset token');
+    }
+
+    // Update the password using the admin API
+    const { error: updateError } = await this.supabaseService.supabaseAdmin.auth.admin.updateUserById(
+      data.user.id,
+      { password: dto.newPassword },
+    );
+
+    if (updateError) {
+      this.logger.error(`Password reset failed for user ${data.user.id}: ${updateError.message}`);
+      throw new BadRequestException(updateError.message);
+    }
+
+    return { data: null, message: 'Password reset successfully' };
   }
 
   async changePassword(userId: string, userEmail: string, dto: ChangePasswordDto) {
