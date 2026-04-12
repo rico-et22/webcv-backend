@@ -2,6 +2,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const archiver = require('archiver') as typeof import('archiver');
+import type { Archiver } from 'archiver';
 import * as Handlebars from 'handlebars';
 import {
   ForbiddenException,
@@ -157,39 +158,79 @@ export class GeneratorService {
 
   // ------------------------------------------------------------------ image helpers
 
-  /**
-   * Fetches an image URL and returns a base64 data URI.
-   * Used in preview mode to make the HTML fully self-contained.
-   * Returns the original URL unchanged on any fetch error.
-   */
-  private async toDataUri(url: string): Promise<string> {
+  private readonly imgExtMap: Record<string, string> = {
+    'image/jpeg': 'jpg',
+    'image/png': 'png',
+    'image/webp': 'webp',
+    'image/gif': 'gif',
+  };
+
+  /** Fetches an image URL. Returns null on any error. */
+  private async fetchImage(url: string): Promise<{ buffer: Buffer; contentType: string } | null> {
     try {
       const res = await fetch(url);
-      if (!res.ok) return url;
+      if (!res.ok) return null;
       const contentType = res.headers.get('content-type') ?? 'image/jpeg';
-      const buffer = await res.arrayBuffer();
-      const base64 = Buffer.from(buffer).toString('base64');
-      return `data:${contentType};base64,${base64}`;
+      const buffer = Buffer.from(await res.arrayBuffer());
+      return { buffer, contentType };
     } catch (err) {
-      this.logger.warn(`Failed to inline image ${url}: ${(err as Error).message}`);
-      return url;
+      this.logger.warn(`Failed to fetch image ${url}: ${(err as Error).message}`);
+      return null;
     }
   }
 
-  /** Replaces remote image URLs with base64 data URIs in the site data clone. */
+  /** Replaces remote image URLs with base64 data URIs in the site data clone (preview mode). */
   private async inlineImages(site: SiteData): Promise<SiteData> {
     const clone = { ...site };
 
-    if (clone.avatarUrl) {
-      clone.avatarUrl = await this.toDataUri(clone.avatarUrl);
-    }
+    const toDataUri = async (url: string): Promise<string> => {
+      const result = await this.fetchImage(url);
+      if (!result) return url;
+      return `data:${result.contentType};base64,${result.buffer.toString('base64')}`;
+    };
+
+    if (clone.avatarUrl) clone.avatarUrl = await toDataUri(clone.avatarUrl);
 
     if (clone.projects?.length) {
       clone.projects = await Promise.all(
         clone.projects.map(async (p) => ({
           ...p,
-          imageUrl: p.imageUrl ? await this.toDataUri(p.imageUrl) : p.imageUrl,
+          imageUrl: p.imageUrl ? await toDataUri(p.imageUrl) : p.imageUrl,
         })),
+      );
+    }
+
+    return clone;
+  }
+
+  /**
+   * Fetches remote images, appends them to the archive as local files,
+   * and returns a site data clone with updated local paths (ZIP mode).
+   */
+  private async bundleImages(site: SiteData, archive: Archiver): Promise<SiteData> {
+    const clone = { ...site };
+
+    if (clone.avatarUrl) {
+      const result = await this.fetchImage(clone.avatarUrl);
+      if (result) {
+        const ext = this.imgExtMap[result.contentType] ?? 'jpg';
+        const localPath = `assets/img/avatar.${ext}`;
+        archive.append(result.buffer, { name: localPath });
+        clone.avatarUrl = localPath;
+      }
+    }
+
+    if (clone.projects?.length) {
+      clone.projects = await Promise.all(
+        clone.projects.map(async (p, i) => {
+          if (!p.imageUrl) return p;
+          const result = await this.fetchImage(p.imageUrl);
+          if (!result) return p;
+          const ext = this.imgExtMap[result.contentType] ?? 'jpg';
+          const localPath = `assets/img/project-${i}.${ext}`;
+          archive.append(result.buffer, { name: localPath });
+          return { ...p, imageUrl: localPath };
+        }),
       );
     }
 
@@ -209,10 +250,6 @@ export class GeneratorService {
 
   async generateZip(userId: string, siteId: string, res: express.Response): Promise<void> {
     const site = await this.fetchSite(userId, siteId);
-    const css = this.styleTpl({ fontSrc: this.fontRelativePath });
-    const js = this.scriptTpl({});
-    const context = this.prepareSiteContext(site, false);
-    const html = this.indexTpl(context);
 
     res.setHeader('Content-Type', 'application/zip');
     res.setHeader(
@@ -221,15 +258,22 @@ export class GeneratorService {
     );
 
     const archive = archiver('zip', { zlib: { level: 9 } });
-
     archive.on('error', (err: Error) => {
       this.logger.error(`Archiver error for site ${siteId}: ${err.message}`);
     });
+    archive.pipe(res);
+
+    // Fetch images and bundle them as local files; updates src paths in the clone.
+    const bundledSite = await this.bundleImages(site, archive);
+
+    const css = this.styleTpl({ fontSrc: this.fontRelativePath });
+    const js = this.scriptTpl({});
+    const context = this.prepareSiteContext(bundledSite, false);
+    const html = this.indexTpl(context);
 
     const fontPath = path.join(__dirname, 'fonts', 'inter-latin-wght-normal.woff2');
     const fontBuffer = fs.readFileSync(fontPath);
 
-    archive.pipe(res);
     archive.append(html, { name: 'index.html' });
     archive.append(css, { name: 'style.css' });
     archive.append(js, { name: 'script.js' });
