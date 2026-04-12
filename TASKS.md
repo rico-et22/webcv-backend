@@ -44,3 +44,4 @@
 - [ ] Environment validation on startup (Zod schema via `@nestjs/config`)
 - [ ] `README.md` — tech stack, local dev setup, Docker setup, initial Supabase setup (buckets, SQL migrations), Resend SMTP configuration
 - [ ] GitHub Actions CI — install, lint, build
+- [ ] Appropriate licensing (incl. Inter font mention, the Magic-UI template inspiration)
