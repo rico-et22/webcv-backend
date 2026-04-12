@@ -3,6 +3,10 @@
   "collection": "@nestjs/schematics",
   "sourceRoot": "src",
   "compilerOptions": {
-    "deleteOutDir": true
+    "deleteOutDir": true,
+    "assets": [
+      { "include": "generator/templates/**/*.hbs", "watchAssets": true },
+      { "include": "generator/fonts/*.woff2", "watchAssets": false }
+    ]
   }
 }

@@ -1,0 +1,24 @@
+<section id="experience" aria-labelledby="experience-heading">
+  <div class="section-header">
+    <span class="section-label">Kariera</span>
+    <h2 class="section-title" id="experience-heading">Doświadczenie zawodowe</h2>
+  </div>
+  <ol class="timeline" aria-label="Lista doświadczeń zawodowych">
+    {{#each experience}}
+    <li class="timeline-item">
+      <div class="timeline-header">
+        <div>
+          <h3 class="timeline-title">{{role}}</h3>
+          <p class="timeline-subtitle">{{company}}</p>
+        </div>
+        <time class="timeline-date" datetime="{{startDate}}">
+          {{formatDate startDate}} — {{formatDate endDate}}
+        </time>
+      </div>
+      {{#if description}}
+      <p class="timeline-description">{{description}}</p>
+      {{/if}}
+    </li>
+    {{/each}}
+  </ol>
+</section>

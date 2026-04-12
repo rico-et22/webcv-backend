@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Portfolio — {{fullName}}{{#if hasJobTitle}}, {{jobTitle}}{{/if}}{{#if hasLocation}} — {{location}}{{/if}}" />
+  <meta property="og:title" content="{{fullName}} — Portfolio" />
+  <meta property="og:description" content="{{#if hasBio}}{{bio}}{{else}}Portfolio zawodowe.{{/if}}" />
+  <meta property="og:type" content="website" />
+  <title>{{fullName}} — Portfolio</title>
+  {{#if inlineMode}}
+  <style>
+    {{{inlineCss}}}
+  </style>
+  {{else}}
+  <link rel="stylesheet" href="style.css" />
+  {{/if}}
+</head>
+<body>
+  <a class="skip-link" href="#main-content">Przejdź do treści</a>
+
+  {{> hero}}
+
+  <main id="main-content">
+    <div class="container">
+      {{#if hasBio}}
+      {{> about}}
+      {{/if}}
+
+      {{#if hasExperience}}
+      {{> experience}}
+      {{/if}}
+
+      {{#if hasEducation}}
+      {{> education}}
+      {{/if}}
+
+      {{#if hasSkills}}
+      {{> skills}}
+      {{/if}}
+
+      {{#if hasProjects}}
+      {{> projects}}
+      {{/if}}
+
+      {{#if hasAchievements}}
+      {{> achievements}}
+      {{/if}}
+
+      {{#if hasContacts}}
+      {{> contact}}
+      {{/if}}
+    </div>
+  </main>
+
+  <footer>
+    <div class="container">
+      <p class="footer-text">
+        &copy; <span id="current-year"></span> {{fullName}}. Wygenerowano z webCV.
+      </p>
+    </div>
+  </footer>
+
+  {{#if inlineMode}}
+  <script>
+    {{{inlineJs}}}
+  </script>
+  {{else}}
+  <script src="script.js" defer></script>
+  {{/if}}
+</body>
+</html>

@@ -229,7 +229,7 @@ Content-Disposition: attachment; filename="portfolio-{siteId}.zip"
 portfolio.zip
   index.html    ← full portfolio page, SEO meta tags included
   style.css     ← responsive styles (RWD)
-  script.js     ← minimal JS (smooth scroll, interactions)
+  script.js     ← minimal JS (interactions)
   assets/       ← placeholder, images referenced via Supabase URLs
 ```
 
@@ -241,6 +241,19 @@ portfolio.zip
 ```
 Content-Type: text/html; charset=utf-8
 ```
+
+### Template Design Constraints
+- Language: Polish (for now)
+- Based on Magic UI Pro portfolio template structure — converted to vanilla HTML/CSS/JS (no React)
+- Sections limited to those reflected in the site schema
+- No external dependencies (no CDN links, no npm packages)
+- Templating engine: Handlebars
+- No fade-in/out animations on the page itself
+- No collapsible content
+- Dark mode via `prefers-color-scheme` media query
+- Basic RWD (font sizes, layout)
+- Accessibility: WCAG 2.1 AA
+- Font: Inter (self-hosted, embedded as base64 data URI in inline/preview mode)
 
 ---
 

@@ -1,0 +1,240 @@
+import * as fs from 'fs';
+import * as path from 'path';
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const archiver = require('archiver') as typeof import('archiver');
+import * as Handlebars from 'handlebars';
+import {
+  ForbiddenException,
+  Injectable,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common';
+import * as express from 'express';
+import { AchievementDto } from '../sites/dto/achievement.dto';
+import { ContactDto } from '../sites/dto/contact.dto';
+import { EducationDto } from '../sites/dto/education.dto';
+import { ExperienceDto } from '../sites/dto/experience.dto';
+import { ProjectDto } from '../sites/dto/project.dto';
+import { SupabaseService } from '../supabase/supabase.service';
+import { registerHelpers } from './helpers/handlebars-helpers';
+import { SiteData, TemplateContext } from './interfaces/site-data.interface';
+
+@Injectable()
+export class GeneratorService {
+  private readonly logger = new Logger(GeneratorService.name);
+
+  private readonly indexTpl: Handlebars.TemplateDelegate;
+  private readonly styleTpl: Handlebars.TemplateDelegate;
+  private readonly scriptTpl: Handlebars.TemplateDelegate;
+  private readonly fontDataUri: string;
+  private readonly fontRelativePath = 'assets/fonts/inter-latin-wght-normal.woff2';
+
+  constructor(private readonly supabaseService: SupabaseService) {
+    registerHelpers();
+    this.registerPartials();
+    this.indexTpl = this.compileTemplate('index.hbs');
+    this.styleTpl = this.compileTemplate('style.hbs');
+    this.scriptTpl = this.compileTemplate('script.hbs');
+    this.fontDataUri = this.loadFontAsDataUri();
+  }
+
+  private loadFontAsDataUri(): string {
+    const fontPath = path.join(__dirname, 'fonts', 'inter-latin-wght-normal.woff2');
+    const buffer = fs.readFileSync(fontPath);
+    return `data:font/woff2;base64,${buffer.toString('base64')}`;
+  }
+
+  // ------------------------------------------------------------------ template setup
+
+  private tplPath(...segments: string[]): string {
+    return path.join(__dirname, 'templates', ...segments);
+  }
+
+  private readTemplate(...segments: string[]): string {
+    return fs.readFileSync(this.tplPath(...segments), 'utf-8');
+  }
+
+  private compileTemplate(...segments: string[]): Handlebars.TemplateDelegate {
+    return Handlebars.compile(this.readTemplate(...segments));
+  }
+
+  private registerPartials(): void {
+    const partials = [
+      'hero',
+      'about',
+      'experience',
+      'education',
+      'skills',
+      'projects',
+      'achievements',
+      'contact',
+    ];
+    for (const name of partials) {
+      Handlebars.registerPartial(name, this.readTemplate('partials', `${name}.hbs`));
+    }
+  }
+
+  // ------------------------------------------------------------------ data fetching
+
+  private async fetchSite(userId: string, siteId: string): Promise<SiteData> {
+    const { data, error } = await this.supabaseService.supabaseAdmin
+      .from('sites')
+      .select('*')
+      .eq('id', siteId)
+      .single();
+
+    if (error || !data) {
+      throw new NotFoundException('Portfolio not found');
+    }
+
+    if (data.user_id !== userId) {
+      throw new ForbiddenException('You do not have access to this portfolio');
+    }
+
+    return this.mapRowToSiteData(data as Record<string, unknown>);
+  }
+
+  private mapRowToSiteData(row: Record<string, unknown>): SiteData {
+    return {
+      id: row.id as string,
+      fullName: row.full_name as string,
+      jobTitle: row.job_title as string | undefined,
+      location: row.location as string | undefined,
+      bio: row.bio as string | undefined,
+      avatarUrl: row.avatar_url as string | undefined,
+      contacts: row.contacts as ContactDto | undefined,
+      skills: row.skills as string[] | undefined,
+      experience: row.experience as ExperienceDto[] | undefined,
+      education: row.education as EducationDto[] | undefined,
+      projects: row.projects as ProjectDto[] | undefined,
+      achievements: row.achievements as AchievementDto[] | undefined,
+    };
+  }
+
+  // ------------------------------------------------------------------ context
+
+  private prepareSiteContext(
+    site: SiteData,
+    inlineMode: boolean,
+    inlineCss?: string,
+    inlineJs?: string,
+  ): TemplateContext {
+    const hasExperience = Array.isArray(site.experience) && site.experience.length > 0;
+    const hasEducation = Array.isArray(site.education) && site.education.length > 0;
+    const hasSkills = Array.isArray(site.skills) && site.skills.length > 0;
+    const hasProjects = Array.isArray(site.projects) && site.projects.length > 0;
+    const hasAchievements = Array.isArray(site.achievements) && site.achievements.length > 0;
+
+    const contacts = site.contacts ?? {};
+    const hasContacts = !!(
+      contacts.email ||
+      contacts.phone ||
+      contacts.linkedin ||
+      contacts.github ||
+      contacts.website
+    );
+
+    const firstName = site.fullName.split(' ')[0] ?? site.fullName;
+
+    return {
+      ...site,
+      firstName,
+      hasAvatarUrl: !!site.avatarUrl,
+      hasBio: !!site.bio,
+      hasJobTitle: !!site.jobTitle,
+      hasLocation: !!site.location,
+      hasContacts,
+      hasExperience,
+      hasEducation,
+      hasSkills,
+      hasProjects,
+      hasAchievements,
+      inlineMode,
+      inlineCss,
+      inlineJs,
+    };
+  }
+
+  // ------------------------------------------------------------------ image helpers
+
+  /**
+   * Fetches an image URL and returns a base64 data URI.
+   * Used in preview mode to make the HTML fully self-contained.
+   * Returns the original URL unchanged on any fetch error.
+   */
+  private async toDataUri(url: string): Promise<string> {
+    try {
+      const res = await fetch(url);
+      if (!res.ok) return url;
+      const contentType = res.headers.get('content-type') ?? 'image/jpeg';
+      const buffer = await res.arrayBuffer();
+      const base64 = Buffer.from(buffer).toString('base64');
+      return `data:${contentType};base64,${base64}`;
+    } catch (err) {
+      this.logger.warn(`Failed to inline image ${url}: ${(err as Error).message}`);
+      return url;
+    }
+  }
+
+  /** Replaces remote image URLs with base64 data URIs in the site data clone. */
+  private async inlineImages(site: SiteData): Promise<SiteData> {
+    const clone = { ...site };
+
+    if (clone.avatarUrl) {
+      clone.avatarUrl = await this.toDataUri(clone.avatarUrl);
+    }
+
+    if (clone.projects?.length) {
+      clone.projects = await Promise.all(
+        clone.projects.map(async (p) => ({
+          ...p,
+          imageUrl: p.imageUrl ? await this.toDataUri(p.imageUrl) : p.imageUrl,
+        })),
+      );
+    }
+
+    return clone;
+  }
+
+  // ------------------------------------------------------------------ public API
+
+  async generatePreview(userId: string, siteId: string): Promise<string> {
+    const site = await this.fetchSite(userId, siteId);
+    const inlinedSite = await this.inlineImages(site);
+    const css = this.styleTpl({ fontSrc: this.fontDataUri });
+    const js = this.scriptTpl({});
+    const context = this.prepareSiteContext(inlinedSite, true, css, js);
+    return this.indexTpl(context);
+  }
+
+  async generateZip(userId: string, siteId: string, res: express.Response): Promise<void> {
+    const site = await this.fetchSite(userId, siteId);
+    const css = this.styleTpl({ fontSrc: this.fontRelativePath });
+    const js = this.scriptTpl({});
+    const context = this.prepareSiteContext(site, false);
+    const html = this.indexTpl(context);
+
+    res.setHeader('Content-Type', 'application/zip');
+    res.setHeader(
+      'Content-Disposition',
+      `attachment; filename="portfolio-${siteId}.zip"`,
+    );
+
+    const archive = archiver('zip', { zlib: { level: 9 } });
+
+    archive.on('error', (err: Error) => {
+      this.logger.error(`Archiver error for site ${siteId}: ${err.message}`);
+    });
+
+    const fontPath = path.join(__dirname, 'fonts', 'inter-latin-wght-normal.woff2');
+    const fontBuffer = fs.readFileSync(fontPath);
+
+    archive.pipe(res);
+    archive.append(html, { name: 'index.html' });
+    archive.append(css, { name: 'style.css' });
+    archive.append(js, { name: 'script.js' });
+    archive.append(fontBuffer, { name: 'assets/fonts/inter-latin-wght-normal.woff2' });
+
+    await archive.finalize();
+  }
+}
