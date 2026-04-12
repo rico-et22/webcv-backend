@@ -31,9 +31,9 @@
 - [x] Review checkpoint
 
 ## Module 6 — Generator
-- [ ] `GeneratorController` + `GeneratorService` (ZIP streaming)
-- [ ] Live preview endpoint (`GET /generator/preview/:siteId`) — single self-contained HTML file, inline CSS/JS, served directly
-- [ ] Review checkpoint
+- [x] `GeneratorController` + `GeneratorService` (ZIP streaming)
+- [x] Live preview endpoint (`GET /generator/preview/:siteId`) — single self-contained HTML file, inline CSS/JS, served directly
+- [x] Review checkpoint
 
 ## Module 6 Extension — GitHub Integration (Optional)
 - [ ] `POST /generator/github/:siteId` — push generated site to GitHub Pages via `octokit`
@@ -44,3 +44,4 @@
 - [ ] Environment validation on startup (Zod schema via `@nestjs/config`)
 - [ ] `README.md` — tech stack, local dev setup, Docker setup, initial Supabase setup (buckets, SQL migrations), Resend SMTP configuration
 - [ ] GitHub Actions CI — install, lint, build
+- [ ] Appropriate licensing (incl. Inter font mention, the Magic-UI template inspiration)

@@ -1,0 +1,16 @@
+<section id="achievements" aria-labelledby="achievements-heading">
+  <div class="section-header">
+    <span class="section-label">Sukcesy</span>
+    <h2 class="section-title" id="achievements-heading">Osiągnięcia</h2>
+  </div>
+  <ul class="achievements-list" aria-label="Lista osiągnięć">
+    {{#each achievements}}
+    <li class="achievement-item">
+      <h3 class="achievement-title">{{title}}</h3>
+      {{#if description}}
+      <p class="achievement-description">{{description}}</p>
+      {{/if}}
+    </li>
+    {{/each}}
+  </ul>
+</section>
