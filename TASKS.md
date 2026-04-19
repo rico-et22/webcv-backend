@@ -40,8 +40,8 @@
 
 ## Finalization
 - [ ] Dockerization (`Dockerfile` + `docker-compose.yml`)
-- [ ] `.env.example` with all required keys listed
+- [x] `.env.example` with all required keys listed
 - [ ] Environment validation on startup (Zod schema via `@nestjs/config`)
-- [ ] `README.md` — tech stack, local dev setup, Docker setup, initial Supabase setup (buckets, SQL migrations), Resend SMTP configuration
+- [x] `README.md` — tech stack, local dev setup, Docker setup, initial Supabase setup (buckets, SQL migrations), Resend SMTP configuration
 - [ ] GitHub Actions CI — install, lint, build
 - [ ] Appropriate licensing (incl. Inter font mention, the Magic-UI template inspiration)
