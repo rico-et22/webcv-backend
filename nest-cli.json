@@ -6,7 +6,8 @@
     "deleteOutDir": true,
     "assets": [
       { "include": "generator/templates/**/*.hbs", "watchAssets": true },
-      { "include": "generator/fonts/*.woff2", "watchAssets": false }
+      { "include": "generator/fonts/*.woff2", "watchAssets": false },
+      { "include": "auth-callback.html", "watchAssets": true }
     ]
   }
 }

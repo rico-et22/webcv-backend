@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>webCV — Konto</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #0d0f14;
+      --surface:  #161a24;
+      --border:   #252a38;
+      --accent:   #6c63ff;
+      --success:  #22c55e;
+      --error:    #ef4444;
+      --text:     #e2e8f0;
+      --muted:    #8892a4;
+      --radius:   16px;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    body::before, body::after {
+      content: '';
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(120px);
+      opacity: 0.15;
+      pointer-events: none;
+    }
+    body::before {
+      width: 600px; height: 600px;
+      background: radial-gradient(circle, #6c63ff 0%, transparent 70%);
+      top: -200px; left: -200px;
+      animation: drift 12s ease-in-out infinite alternate;
+    }
+    body::after {
+      width: 500px; height: 500px;
+      background: radial-gradient(circle, #22d3ee 0%, transparent 70%);
+      bottom: -150px; right: -150px;
+      animation: drift 15s ease-in-out infinite alternate-reverse;
+    }
+    @keyframes drift {
+      from { transform: translate(0, 0); }
+      to   { transform: translate(40px, 40px); }
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 48px 40px;
+      width: 100%;
+      max-width: 440px;
+      position: relative;
+      box-shadow: 0 24px 64px rgba(0,0,0,0.5);
+      animation: fadeUp .45s ease both;
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .logo {
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      margin-bottom: 32px;
+    }
+
+    .icon-wrap {
+      width: 64px; height: 64px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 24px;
+      font-size: 28px;
+    }
+    .icon-wrap.success { background: rgba(34,197,94,.15); }
+    .icon-wrap.lock    { background: rgba(108,99,255,.15); }
+    .icon-wrap.warn    { background: rgba(239,68,68,.12); }
+
+    h1 {
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+      margin-bottom: 8px;
+    }
+    .subtitle {
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.6;
+      margin-bottom: 32px;
+    }
+
+    .field { margin-bottom: 16px; }
+    label {
+      display: block;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+    input[type="password"] {
+      width: 100%;
+      padding: 12px 16px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 15px;
+      outline: none;
+      transition: border-color .2s, box-shadow .2s;
+    }
+    input[type="password"]:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(108,99,255,.2);
+    }
+
+    .btn {
+      width: 100%;
+      padding: 13px;
+      border: none;
+      border-radius: 10px;
+      font-family: inherit;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity .2s, transform .1s;
+      background: linear-gradient(135deg, var(--accent), #857cff);
+      color: #fff;
+      margin-top: 8px;
+    }
+    .btn:hover  { opacity: .9; }
+    .btn:active { transform: scale(.98); }
+    .btn:disabled { opacity: .5; cursor: not-allowed; }
+
+    .alert {
+      padding: 12px 16px;
+      border-radius: 10px;
+      font-size: 14px;
+      display: none;
+      margin-top: 16px;
+      line-height: 1.5;
+    }
+    .alert.show    { display: block; animation: fadeUp .25s ease; }
+    .alert.success { background: rgba(34,197,94,.12); color: #4ade80; border: 1px solid rgba(34,197,94,.25); }
+    .alert.error   { background: rgba(239,68,68,.12);  color: #f87171; border: 1px solid rgba(239,68,68,.25); }
+
+
+
+    hr { border: none; border-top: 1px solid var(--border); margin: 28px 0; }
+    .close-note { text-align: center; font-size: 13px; color: var(--muted); }
+  </style>
+</head>
+<body>
+  <div class="card" id="app"></div>
+
+  <script>
+    (function () {
+      const app = document.getElementById('app');
+
+      const hash   = window.location.hash.slice(1);
+      const params = Object.fromEntries(new URLSearchParams(hash));
+      const { type, access_token: accessToken } = params;
+
+      function logo() {
+        return '<div class="logo">webCV</div>';
+      }
+
+      function showAlert(id, kind, msg) {
+        const el = document.getElementById(id);
+        el.className = 'alert ' + kind + ' show';
+        el.textContent = msg;
+      }
+
+      /* ── Potwierdzenie rejestracji ───────────────────────────── */
+      function renderSignup() {
+        app.innerHTML = logo() + `
+          <div class="icon-wrap success">✅</div>
+          <h1>E-mail zweryfikowany!</h1>
+          <p class="subtitle">
+            Twoje konto zostało pomyślnie potwierdzone.<br/>
+            Możesz zamknąć tę kartę i zalogować się w aplikacji webCV.
+          </p>
+          <hr />
+          <p class="close-note">To okno można bezpiecznie zamknąć.</p>
+        `;
+      }
+
+      /* ── Resetowanie hasła ──────────────────────────────────── */
+      function renderRecovery() {
+        app.innerHTML = logo() + `
+          <div class="icon-wrap lock">🔒</div>
+          <h1>Ustaw nowe hasło</h1>
+          <p class="subtitle">Wybierz silne hasło dla swojego konta.</p>
+          <form id="reset-form" autocomplete="off">
+            <div class="field">
+              <label for="pw1">Nowe hasło</label>
+              <input id="pw1" type="password" minlength="8" placeholder="Minimum 8 znaków" required />
+            </div>
+            <div class="field">
+              <label for="pw2">Powtórz hasło</label>
+              <input id="pw2" type="password" placeholder="Wpisz hasło ponownie" required />
+            </div>
+            <button class="btn" id="submit-btn" type="submit">Resetuj hasło</button>
+            <div class="alert" id="reset-alert"></div>
+          </form>
+        `;
+
+
+        document.getElementById('reset-form').addEventListener('submit', async function (e) {
+          e.preventDefault();
+          const pw1 = document.getElementById('pw1').value;
+          const pw2 = document.getElementById('pw2').value;
+          const btn = document.getElementById('submit-btn');
+
+          if (pw1 !== pw2) {
+            showAlert('reset-alert', 'error', 'Hasła nie są identyczne.');
+            return;
+          }
+
+          btn.disabled     = true;
+          btn.textContent  = 'Trwa resetowanie…';
+
+          try {
+            const res  = await fetch('/auth/confirm-reset', {
+              method:  'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body:    JSON.stringify({ accessToken, newPassword: pw1 }),
+            });
+            const json = await res.json();
+
+            if (res.ok) {
+              app.innerHTML = logo() + `
+                <div class="icon-wrap success">✅</div>
+                <h1>Hasło zostało zmienione!</h1>
+                <p class="subtitle">Hasło zostało pomyślnie zresetowane. Możesz zamknąć tę kartę i zalogować się.</p>
+                <hr />
+                <p class="close-note">To okno można bezpiecznie zamknąć.</p>
+              `;
+            } else {
+              const msg = json.message || 'Coś poszło nie tak. Link mógł wygasnąć.';
+              showAlert('reset-alert', 'error', msg);
+              btn.disabled    = false;
+              btn.textContent = 'Resetuj hasło';
+            }
+          } catch (_) {
+            showAlert('reset-alert', 'error', 'Błąd sieci. Spróbuj ponownie.');
+            btn.disabled    = false;
+            btn.textContent = 'Resetuj hasło';
+          }
+        });
+      }
+
+      /* ── Nieprawidłowy link ─────────────────────────────────── */
+      function renderFallback() {
+        app.innerHTML = logo() + `
+          <div class="icon-wrap warn">⚠️</div>
+          <h1>Nieprawidłowy link</h1>
+          <p class="subtitle">Ten link jest nieprawidłowy lub został już użyty. Poproś o nowy.</p>
+        `;
+      }
+
+      if (type === 'signup' && accessToken) {
+        renderSignup();
+      } else if (type === 'recovery' && accessToken) {
+        renderRecovery();
+      } else {
+        renderFallback();
+      }
+    })();
+  </script>
+</body>
+</html>
