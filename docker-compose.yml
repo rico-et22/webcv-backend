@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  webcv-api:
+    build:
+      context: .
+      target: production
+    container_name: webcv-backend
+    ports:
+      - "${PORT:-3000}:3000"
+    env_file:
+      - .env
+    restart: unless-stopped
+    # Because Supabase handles DB and Storage remotely, 
+    # we don't need any local postgres or redis containers here.

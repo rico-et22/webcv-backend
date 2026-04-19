@@ -38,7 +38,14 @@ By default, Supabase's built-in email service is heavily rate-limited and should
    - **Sender email:** e.g., `noreply@yourdomain.com`
 
 ## Docker Setup
-_To be implemented. This application will include a `Dockerfile` and `docker-compose.yml` for containerized deployments._
+This application is fully containerized using a multi-stage `Dockerfile`. 
+To run the application via Docker:
+1. Ensure your `.env` file is fully configured.
+2. Run the application using Docker Compose:
+   ```bash
+   docker-compose up --build -d
+   ```
+This will build the production image and spin up the stateless NestJS API on port `3000`.
 
 ## Installation Instructions
 
