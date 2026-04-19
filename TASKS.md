@@ -41,7 +41,7 @@
 ## Finalization
 - [x] Dockerization (`Dockerfile` + `docker-compose.yml`)
 - [x] `.env.example` with all required keys listed
-- [ ] Environment validation on startup (Zod schema via `@nestjs/config`)
+- [x] Environment validation on startup (Zod schema via `@nestjs/config`)
 - [x] `README.md` — tech stack, local dev setup, Docker setup, initial Supabase setup (buckets, SQL migrations), Resend SMTP configuration
 - [x] Render Deployment — configure connected GitHub repository for automatic deployment
 - [ ] Appropriate licensing (incl. Inter font mention, the Magic-UI template inspiration)
