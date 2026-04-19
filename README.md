@@ -87,3 +87,10 @@ This will build the production image and spin up the stateless NestJS API on por
 This application was actively co-developed using advanced Agentic AI coding assistants. 
 - **AI Models:** Gemini 3.1 Pro, Claude Sonnet/Opus 4.6
 - **AI Agents/Environments:** Google Antigravity, Claude Code
+
+## Acknowledgments & Licensing
+This project is licensed under the MIT License.
+
+Special thanks to the following open-source resources that inspired or are included in this project:
+- **[Inter Font](https://rsms.me/inter/):** Used within the generated web portfolios. Inter is licensed under the SIL Open Font License (OFL).
+- **[Magic UI](https://magicui.design/):** The design and aesthetic of the generated portfolios take heavy inspiration from Magic UI's stunning modern templates.
