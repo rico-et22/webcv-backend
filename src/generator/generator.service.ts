@@ -4,6 +4,7 @@ import * as path from 'path';
 const archiver = require('archiver') as typeof import('archiver');
 import type { Archiver } from 'archiver';
 import * as Handlebars from 'handlebars';
+import { ConfigService } from '@nestjs/config';
 import {
   ForbiddenException,
   Injectable,
@@ -30,13 +31,22 @@ export class GeneratorService {
   private readonly fontDataUri: string;
   private readonly fontRelativePath = 'assets/fonts/inter-latin-wght-normal.woff2';
 
-  constructor(private readonly supabaseService: SupabaseService) {
+  constructor(
+    private readonly supabaseService: SupabaseService,
+    private readonly configService: ConfigService,
+  ) {
     registerHelpers();
     this.registerPartials();
     this.indexTpl = this.compileTemplate('index.hbs');
     this.styleTpl = this.compileTemplate('style.hbs');
     this.scriptTpl = this.compileTemplate('script.hbs');
     this.fontDataUri = this.loadFontAsDataUri();
+  }
+
+  /** Builds the public URL for a file in the screenshots Supabase Storage bucket. */
+  private storagePublicUrl(storagePath: string): string {
+    const base = this.configService.get<string>('SUPABASE_URL');
+    return `${base}/storage/v1/object/public/screenshots/${storagePath}`;
   }
 
   private loadFontAsDataUri(): string {
@@ -193,10 +203,11 @@ export class GeneratorService {
 
     if (clone.projects?.length) {
       clone.projects = await Promise.all(
-        clone.projects.map(async (p) => ({
-          ...p,
-          imageUrl: p.imageUrl ? await toDataUri(p.imageUrl) : p.imageUrl,
-        })),
+        clone.projects.map(async (p) => {
+          if (!p.imageStoragePath) return p;
+          const publicUrl = this.storagePublicUrl(p.imageStoragePath);
+          return { ...p, imageUrl: await toDataUri(publicUrl) };
+        }),
       );
     }
 
@@ -223,8 +234,9 @@ export class GeneratorService {
     if (clone.projects?.length) {
       clone.projects = await Promise.all(
         clone.projects.map(async (p, i) => {
-          if (!p.imageUrl) return p;
-          const result = await this.fetchImage(p.imageUrl);
+          if (!p.imageStoragePath) return p;
+          const publicUrl = this.storagePublicUrl(p.imageStoragePath);
+          const result = await this.fetchImage(publicUrl);
           if (!result) return p;
           const ext = this.imgExtMap[result.contentType] ?? 'jpg';
           const localPath = `assets/img/project-${i}.${ext}`;

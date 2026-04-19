@@ -56,7 +56,7 @@ export class SitesService {
   async findAll(userId: string) {
     const { data, error } = await this.supabaseService.supabaseAdmin
       .from('sites')
-      .select('*')
+      .select('id, full_name, job_title, avatar_url, created_at, updated_at')
       .eq('user_id', userId)
       .order('created_at', { ascending: false });
 

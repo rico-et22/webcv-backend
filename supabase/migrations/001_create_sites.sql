@@ -11,10 +11,10 @@ CREATE TABLE IF NOT EXISTS sites (
   avatar_url    TEXT,
   contacts      JSONB    NOT NULL DEFAULT '{}',
   skills        TEXT[]   NOT NULL DEFAULT '{}',
-  experience    JSONB[]  NOT NULL DEFAULT '{}',
-  education     JSONB[]  NOT NULL DEFAULT '{}',
-  projects      JSONB[]  NOT NULL DEFAULT '{}',
-  achievements  JSONB[]  NOT NULL DEFAULT '{}',
+  experience    JSONB    NOT NULL DEFAULT '[]'::jsonb,
+  education     JSONB    NOT NULL DEFAULT '[]'::jsonb,
+  projects      JSONB    NOT NULL DEFAULT '[]'::jsonb,
+  achievements  JSONB    NOT NULL DEFAULT '[]'::jsonb,
   created_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at    TIMESTAMPTZ NOT NULL DEFAULT now()
 );

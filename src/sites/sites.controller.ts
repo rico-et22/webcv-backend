@@ -10,17 +10,21 @@ import {
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
+  ApiExtraModels,
   ApiOperation,
   ApiParam,
   ApiResponse,
   ApiTags,
+  getSchemaPath,
 } from '@nestjs/swagger';
 import { CreateSiteDto } from './dto/create-site.dto';
+import { SiteResponseDto, SiteSummaryResponseDto } from './dto/site-responses.dto';
 import { UpdateSiteDto } from './dto/update-site.dto';
 import { SitesService } from './sites.service';
 
 @ApiTags('sites')
 @ApiBearerAuth()
+@ApiExtraModels(SiteResponseDto, SiteSummaryResponseDto)
 @Controller('sites')
 export class SitesController {
   constructor(private readonly sitesService: SitesService) {}
@@ -29,7 +33,16 @@ export class SitesController {
 
   @Post()
   @ApiOperation({ summary: 'Create a new portfolio site' })
-  @ApiResponse({ status: 201, description: 'Portfolio created successfully' })
+  @ApiResponse({
+    status: 201,
+    description: 'Portfolio created successfully',
+    schema: {
+      properties: {
+        data: { $ref: getSchemaPath(SiteResponseDto) },
+        message: { type: 'string', example: 'Portfolio created successfully' },
+      },
+    },
+  })
   @ApiResponse({ status: 400, description: 'Validation error' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   create(
@@ -43,7 +56,19 @@ export class SitesController {
 
   @Get()
   @ApiOperation({ summary: 'Get all portfolio sites for the current user' })
-  @ApiResponse({ status: 200, description: 'List of portfolios returned' })
+  @ApiResponse({
+    status: 200,
+    description: 'List of portfolios returned',
+    schema: {
+      properties: {
+        data: {
+          type: 'array',
+          items: { $ref: getSchemaPath(SiteSummaryResponseDto) },
+        },
+        message: { type: 'string', example: 'Portfolios retrieved successfully' },
+      },
+    },
+  })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   findAll(@Request() req: { user: { sub: string } }) {
     return this.sitesService.findAll(req.user.sub);
@@ -54,7 +79,16 @@ export class SitesController {
   @Get(':id')
   @ApiOperation({ summary: 'Get a specific portfolio site by ID' })
   @ApiParam({ name: 'id', description: 'Portfolio site UUID' })
-  @ApiResponse({ status: 200, description: 'Portfolio returned' })
+  @ApiResponse({
+    status: 200,
+    description: 'Portfolio returned',
+    schema: {
+      properties: {
+        data: { $ref: getSchemaPath(SiteResponseDto) },
+        message: { type: 'string', example: 'Portfolio retrieved successfully' },
+      },
+    },
+  })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 403, description: 'Forbidden — site belongs to another user' })
   @ApiResponse({ status: 404, description: 'Portfolio not found' })
@@ -70,7 +104,16 @@ export class SitesController {
   @Put(':id')
   @ApiOperation({ summary: 'Update a portfolio site' })
   @ApiParam({ name: 'id', description: 'Portfolio site UUID' })
-  @ApiResponse({ status: 200, description: 'Portfolio updated successfully' })
+  @ApiResponse({
+    status: 200,
+    description: 'Portfolio updated successfully',
+    schema: {
+      properties: {
+        data: { $ref: getSchemaPath(SiteResponseDto) },
+        message: { type: 'string', example: 'Portfolio updated successfully' },
+      },
+    },
+  })
   @ApiResponse({ status: 400, description: 'Validation error' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 403, description: 'Forbidden — site belongs to another user' })
