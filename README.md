@@ -1,98 +1,96 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# webCV Backend
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+## Purpose
+webCV is a REST API backend for a portfolio website generator designed for IT professionals. It is being built as a university "Data Management" course deliverable and to be reused in the future as the backend for an engineering thesis.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+The core philosophy behind webCV is **user independence** — there is no vendor lock-in, meaning users fully own and control their generated static sites.
 
-## Description
+## Tech Stack
+This application is built with a focus on strict typing, stateless file handling, and solid architecture:
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+- **Framework:** NestJS (Node.js)
+- **Language:** TypeScript (strict mode)
+- **Database:** PostgreSQL via Supabase
+- **Storage:** Supabase Storage
+- **Authentication:** Supabase Auth / JWT
+- **AI Integration:** Google Gemini API
+- **API Documentation:** `@nestjs/swagger`
+- **Validation:** `class-validator` + `class-transformer`
+- **File Export:** `archiver` (in-memory ZIP streaming)
+- **GitHub Export:** `octokit` (optional)
 
-## Project setup
+## Supabase Setup
+To run this application properly, you must configure a Supabase project:
+1. **Database:** Run the SQL migrations (e.g. from `supabase/migrations/`) via the Supabase CLI or SQL Editor to create the necessary tables (`users`, `sites`).
+2. **Storage:** Create two public buckets named `avatars` and `screenshots`. 
+3. **RLS Policies:** Apply the storage RLS policies located in `supabase/migrations/storage_rls_policies.sql` in the SQL Editor to ensure proper access control (enforcing user ownership of uploads).
 
-```bash
-$ pnpm install
-```
+## SMTP Configuration (Resend)
+By default, Supabase's built-in email service is heavily rate-limited and shouldn't be used for production. You should configure a custom SMTP provider (e.g., Resend):
+1. Create an account on [Resend](https://resend.com) and verify your sending domain.
+2. Generate an SMTP API Key.
+3. In your Supabase Dashboard, go to **Authentication > Emails > Custom SMTP**.
+4. Enable Custom SMTP and fill in your Resend details:
+   - **Host:** `smtp.resend.com`
+   - **Port:** `465`
+   - **Username:** `resend`
+   - **Password:** `<your-resend-api-key>`
+   - **Sender email:** e.g., `noreply@yourdomain.com`
 
-## Compile and run the project
+## Docker Setup
+This application is fully containerized using a multi-stage `Dockerfile`. 
+To run the application via Docker:
+1. Ensure your `.env` file is fully configured.
+2. Run the application using Docker Compose:
+   ```bash
+   docker-compose up --build -d
+   ```
+This will build the production image and spin up the stateless NestJS API on port `3000`.
 
-```bash
-# development
-$ pnpm run start
+## Installation Instructions
 
-# watch mode
-$ pnpm run start:dev
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url>
+   cd webcv-backend
+   ```
 
-# production mode
-$ pnpm run start:prod
-```
+2. **Install dependencies**
+   This project STRICTLY uses `pnpm` for package management.
+   ```bash
+   pnpm install
+   ```
 
-## Run tests
+3. **Configure Environment Variables**
+   Copy `.env.example` to `.env` and fill in the required keys:
+   ```bash
+   cp .env.example .env
+   ```
+   - `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`
+   - `GEMINI_API_KEY`
+   - `JWT_SECRET` (from Supabase dashboard)
+   - `PORT` (defaults to 3000)
 
-```bash
-# unit tests
-$ pnpm run test
+4. **Run the application**
+   ```bash
+   # watch mode (development)
+   pnpm run start:dev
 
-# e2e tests
-$ pnpm run test:e2e
+   # production mode
+   pnpm run start:prod
+   ```
 
-# test coverage
-$ pnpm run test:cov
-```
+5. **Access API Documentation**
+   Once the application is running, the Swagger API documentation will be available (typically at `/api` or `/swagger`, depending on your bootstrap configuration).
 
-## Deployment
+## AI Co-Development
+This application was actively co-developed using advanced Agentic AI coding assistants. 
+- **AI Models:** Gemini 3.1 Pro, Claude Sonnet/Opus 4.6
+- **AI Agents/Environments:** Google Antigravity, Claude Code
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+## Acknowledgments & Licensing
+This project is licensed under the MIT License.
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
-
-```bash
-$ pnpm install -g @nestjs/mau
-$ mau deploy
-```
-
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
-
-## Resources
-
-Check out a few resources that may come in handy when working with NestJS:
-
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
-
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+Special thanks to the following open-source resources that inspired or are included in this project:
+- **[Inter Font](https://rsms.me/inter/):** Used within the generated web portfolios. Inter is licensed under the SIL Open Font License (OFL).
+- **[Magic UI](https://magicui.design/):** The design and aesthetic of the generated portfolios take heavy inspiration from Magic UI's stunning modern templates.

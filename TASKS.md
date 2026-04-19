@@ -36,12 +36,12 @@
 - [x] Review checkpoint
 
 ## Module 6 Extension — GitHub Integration (Optional)
-- [ ] `POST /generator/github/:siteId` — push generated site to GitHub Pages via `octokit`
+- [~] `POST /generator/github/:siteId` — push generated site to GitHub Pages via `octokit` (Postponed for later)
 
 ## Finalization
-- [ ] Dockerization (`Dockerfile` + `docker-compose.yml`)
-- [ ] `.env.example` with all required keys listed
-- [ ] Environment validation on startup (Zod schema via `@nestjs/config`)
-- [ ] `README.md` — tech stack, local dev setup, Docker setup, initial Supabase setup (buckets, SQL migrations), Resend SMTP configuration
-- [ ] GitHub Actions CI — install, lint, build
-- [ ] Appropriate licensing (incl. Inter font mention, the Magic-UI template inspiration)
+- [x] Dockerization (`Dockerfile` + `docker-compose.yml`)
+- [x] `.env.example` with all required keys listed
+- [x] Environment validation on startup (Zod schema via `@nestjs/config`)
+- [x] `README.md` — tech stack, local dev setup, Docker setup, initial Supabase setup (buckets, SQL migrations), Resend SMTP configuration
+- [x] Render Deployment — configure connected GitHub repository for automatic deployment
+- [x] Appropriate licensing (incl. Inter font mention, the Magic-UI template inspiration)
