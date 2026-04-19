@@ -5,7 +5,7 @@ import { ApiExcludeController } from '@nestjs/swagger';
 import { Public } from './common/decorators/public.decorator';
 
 const HTML_PAGE = readFileSync(
-  join(process.cwd(), 'src', 'auth-callback.html'),
+  join(__dirname, 'auth-callback.html'),
   'utf-8',
 );
 
