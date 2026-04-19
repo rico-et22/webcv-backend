@@ -78,7 +78,7 @@ email?: string       // optional
 | Method | Path | Auth | Description |
 |---|---|---|---|
 | POST | `/sites` | 🔒 JWT | Create a new portfolio |
-| GET | `/sites` | 🔒 JWT | Get all portfolios for current user |
+| GET | `/sites` | 🔒 JWT | Get all portfolios for current user (returns metadata summary only) |
 | GET | `/sites/:id` | 🔒 JWT | Get a specific portfolio |
 | PUT | `/sites/:id` | 🔒 JWT | Update portfolio data |
 | DELETE | `/sites/:id` | 🔒 JWT | Delete a portfolio |
@@ -97,13 +97,23 @@ contacts: json       // { email?, phone?, linkedin?, github?, website? }
 skills: string[]
 experience: json[]   // [{ company, role, startDate, endDate, description }]
 education: json[]    // [{ institution, degree, startDate, endDate }]
-projects: json[]     // [{ name, description, url, imageUrl, imageStoragePath }]
+projects: json[]     // [{ name, description, url, imageStoragePath }]
 achievements: json[] // [{ title, description }]
 createdAt: timestamp
 updatedAt: timestamp
 ```
 
 ### DTOs
+
+**SiteSummaryResponseDto** (Returned by `GET /sites` to reduce payload size for dashboard tables)
+```ts
+id: string
+fullName: string
+jobTitle?: string
+avatarUrl?: string
+createdAt: string
+updatedAt: string
+```
 
 **CreateSiteDto** — `fullName` required, all other fields optional. **UpdateSiteDto** = `PartialType(CreateSiteDto)` (all fields optional).
 ```ts
