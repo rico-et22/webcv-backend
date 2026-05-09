@@ -169,3 +169,4 @@ When asked to implement a module, always follow this order:
 - All database queries must be scoped to the authenticated user's ID to prevent cross-user data access.
 - ALWAYS use `pnpm` for package management.
 - Prefer `curl` testing as it's easier than Swagger via browser MCP.
+- Before starting dev server, check if it's already running and kill it if necessary.

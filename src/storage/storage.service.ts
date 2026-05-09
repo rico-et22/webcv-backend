@@ -8,8 +8,9 @@ import { SupabaseService } from '../supabase/supabase.service';
 
 const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
 const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50 MB
-const AVATARS_BUCKET = 'avatars';
-const SCREENSHOTS_BUCKET = 'screenshots';
+const VALID_BUCKETS = ['avatars', 'screenshots'] as const;
+
+export type StorageBucket = (typeof VALID_BUCKETS)[number];
 
 @Injectable()
 export class StorageService {
@@ -50,94 +51,33 @@ export class StorageService {
     return data.publicUrl;
   }
 
-  // --------------------------------------------------------------- uploadAvatar
+  // ----------------------------------------------------------------- uploadFile
 
-  async uploadAvatar(
+  async uploadFile(
     userId: string,
-    siteId: string,
     jwt: string,
+    bucket: StorageBucket,
     file: Express.Multer.File,
   ): Promise<{ url: string; storagePath: string }> {
     this.validateImage(file);
 
-    // Verify the site belongs to this user
-    const { data: site, error: siteError } = await this.supabaseService.supabaseAdmin
-      .from('sites')
-      .select('id, user_id')
-      .eq('id', siteId)
-      .single();
-
-    if (siteError || !site) {
-      throw new BadRequestException('Site not found');
-    }
-    if (site.user_id !== userId) {
-      throw new ForbiddenException('You do not own this site');
-    }
-
     const ext = this.getExtension(file.mimetype);
-    const storagePath = `${userId}/${siteId}/avatar.${ext}`;
+    const storagePath = `${userId}/${Date.now()}.${ext}`;
 
     const { error } = await this.supabaseService.clientForUser(jwt).storage
-      .from(AVATARS_BUCKET)
-      .upload(storagePath, file.buffer, {
-        contentType: file.mimetype,
-        upsert: true,
-      });
-
-    if (error) {
-      this.logger.error(`Avatar upload failed for site ${siteId}: ${error.message}`);
-      throw new BadRequestException(`Upload failed: ${error.message}`);
-    }
-
-    const url = this.getPublicUrl(AVATARS_BUCKET, storagePath);
-    this.logger.log(`Avatar uploaded for site ${siteId}: ${storagePath}`);
-    return { url, storagePath };
-  }
-
-  // ---------------------------------------------------------- uploadScreenshot
-
-  async uploadScreenshot(
-    userId: string,
-    siteId: string,
-    jwt: string,
-    file: Express.Multer.File,
-  ): Promise<{ url: string; storagePath: string }> {
-    this.validateImage(file);
-
-    // Verify the site belongs to this user
-    const { data: site, error: siteError } = await this.supabaseService.supabaseAdmin
-      .from('sites')
-      .select('id, user_id')
-      .eq('id', siteId)
-      .single();
-
-    if (siteError || !site) {
-      throw new BadRequestException('Site not found');
-    }
-    if (site.user_id !== userId) {
-      throw new ForbiddenException('You do not own this site');
-    }
-
-    const ext = this.getExtension(file.mimetype);
-    const timestamp = Date.now();
-    const storagePath = `${userId}/${siteId}/${timestamp}.${ext}`;
-
-    const { error } = await this.supabaseService.clientForUser(jwt).storage
-      .from(SCREENSHOTS_BUCKET)
+      .from(bucket)
       .upload(storagePath, file.buffer, {
         contentType: file.mimetype,
         upsert: false,
       });
 
     if (error) {
-      this.logger.error(
-        `Screenshot upload failed for site ${siteId}: ${error.message}`,
-      );
+      this.logger.error(`Upload failed (${bucket}/${storagePath}): ${error.message}`);
       throw new BadRequestException(`Upload failed: ${error.message}`);
     }
 
-    const url = this.getPublicUrl(SCREENSHOTS_BUCKET, storagePath);
-    this.logger.log(`Screenshot uploaded for site ${siteId}: ${storagePath}`);
+    const url = this.getPublicUrl(bucket, storagePath);
+    this.logger.log(`File uploaded by user ${userId}: ${bucket}/${storagePath}`);
     return { url, storagePath };
   }
 
@@ -146,7 +86,7 @@ export class StorageService {
   async deleteFile(
     userId: string,
     jwt: string,
-    bucket: 'avatars' | 'screenshots',
+    bucket: StorageBucket,
     path: string,
   ): Promise<void> {
     // Ensure users can only delete their own files

@@ -5,7 +5,6 @@ import {
   HttpCode,
   HttpStatus,
   Logger,
-  Param,
   Post,
   Request,
   UploadedFile,
@@ -17,11 +16,11 @@ import {
   ApiBody,
   ApiConsumes,
   ApiOperation,
-  ApiParam,
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
 import { DeleteFileDto } from './dto/delete-file.dto';
+import { UploadFileDto } from './dto/upload-file.dto';
 import { UploadResponseDto } from './dto/upload-response.dto';
 import { StorageService } from './storage.service';
 
@@ -33,74 +32,51 @@ export class StorageController {
 
   constructor(private readonly storageService: StorageService) {}
 
-  // ------------------------------------------------------------ POST /avatar
+  // ------------------------------------------------------------ POST /upload
 
-  @Post('avatar/:siteId')
+  @Post('upload')
   @HttpCode(HttpStatus.CREATED)
   @UseInterceptors(FileInterceptor('file'))
-  @ApiOperation({ summary: 'Upload or replace the avatar for a portfolio site' })
-  @ApiParam({ name: 'siteId', description: 'UUID of the site to attach the avatar to' })
+  @ApiOperation({
+    summary: 'Upload an image to a storage bucket',
+    description:
+      'Uploads an image file to the specified bucket. The file is stored under `userId/<timestamp>.<ext>`. ' +
+      'Use this before creating a site to obtain the `storagePath` (and optionally `url`) to embed in the site payload.',
+  })
   @ApiConsumes('multipart/form-data')
   @ApiBody({
     schema: {
       type: 'object',
-      required: ['file'],
+      required: ['file', 'bucket'],
       properties: {
         file: {
           type: 'string',
           format: 'binary',
           description: 'Image file (jpeg, png, webp, gif, max 50 MB)',
         },
-      },
-    },
-  })
-  @ApiResponse({ status: 201, description: 'Avatar uploaded', type: UploadResponseDto })
-  @ApiResponse({ status: 400, description: 'No file provided or invalid file type' })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @ApiResponse({ status: 403, description: 'You do not own this site' })
-  async uploadAvatar(
-    @Request() req: { user: { sub: string }; headers: { authorization: string } },
-    @Param('siteId') siteId: string,
-    @UploadedFile() file: Express.Multer.File,
-  ) {
-    const jwt = req.headers.authorization.replace('Bearer ', '');
-    const result = await this.storageService.uploadAvatar(req.user.sub, siteId, jwt, file);
-    return { data: result, message: 'Avatar uploaded successfully' };
-  }
-
-  // ------------------------------------------------- POST /screenshot/:siteId
-
-  @Post('screenshot/:siteId')
-  @HttpCode(HttpStatus.CREATED)
-  @UseInterceptors(FileInterceptor('file'))
-  @ApiOperation({ summary: 'Upload a screenshot for a portfolio site' })
-  @ApiConsumes('multipart/form-data')
-  @ApiParam({ name: 'siteId', description: 'UUID of the site to attach the screenshot to' })
-  @ApiBody({
-    schema: {
-      type: 'object',
-      required: ['file'],
-      properties: {
-        file: {
+        bucket: {
           type: 'string',
-          format: 'binary',
-          description: 'Image file (jpeg, png, webp, gif, max 50 MB)',
+          enum: ['avatars', 'screenshots'],
+          description: 'Target storage bucket',
         },
       },
     },
   })
-  @ApiResponse({ status: 201, description: 'Screenshot uploaded', type: UploadResponseDto })
-  @ApiResponse({ status: 400, description: 'No file provided, invalid type, or site not found' })
+  @ApiResponse({
+    status: 201,
+    description: 'File uploaded successfully',
+    type: UploadResponseDto,
+  })
+  @ApiResponse({ status: 400, description: 'No file provided, invalid type/size, or invalid bucket' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @ApiResponse({ status: 403, description: 'You do not own this site' })
-  async uploadScreenshot(
+  async upload(
     @Request() req: { user: { sub: string }; headers: { authorization: string } },
-    @Param('siteId') siteId: string,
     @UploadedFile() file: Express.Multer.File,
+    @Body() dto: UploadFileDto,
   ) {
     const jwt = req.headers.authorization.replace('Bearer ', '');
-    const result = await this.storageService.uploadScreenshot(req.user.sub, siteId, jwt, file);
-    return { data: result, message: 'Screenshot uploaded successfully' };
+    const result = await this.storageService.uploadFile(req.user.sub, jwt, dto.bucket, file);
+    return { data: result, message: 'File uploaded successfully' };
   }
 
   // ------------------------------------------------------------ DELETE /file

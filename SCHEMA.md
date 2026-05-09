@@ -122,7 +122,7 @@ jobTitle?: string
 location?: string
 bio?: string
 avatarUrl?: string            // @IsUrl
-avatarStoragePath?: string    // returned by POST /storage/avatar/:siteId
+avatarStoragePath?: string    // returned by POST /storage/upload
 contacts?: ContactDto     // { email?, phone?, linkedin?, github?, website? }
 skills?: string[]
 experience?: ExperienceDto[]  // { company, role, startDate, endDate?, description? }
@@ -138,20 +138,24 @@ achievements?: AchievementDto[] // { title, description? }
 ### Endpoints
 | Method | Path | Auth | Description |
 |---|---|---|---|
-| POST | `/storage/avatar/:siteId` | 🔒 JWT | Upload or replace the avatar for a portfolio site (ownership verified) |
-| POST | `/storage/screenshot/:siteId` | 🔒 JWT | Upload a screenshot for a portfolio site (ownership verified) |
+| POST | `/storage/upload` | 🔒 JWT | Upload an image to a bucket (`avatars` or `screenshots`) — no siteId required |
 | DELETE | `/storage/file` | 🔒 JWT | Delete a file by `{ bucket, path }` |
+
+### Request — `POST /storage/upload`
+`multipart/form-data` with fields:
+- `file` — image binary
+- `bucket` — `"avatars"` or `"screenshots"`
 
 ### Notes
 - Accepted MIME types: `image/jpeg`, `image/png`, `image/webp`, `image/gif`
 - Max file size: **50 MB** (enforced in code)
-- Buckets: `avatars` (avatar per site), `screenshots` (project images per site)
-- Upload responses return `{ url, storagePath }` — store `storagePath` on the resource (e.g. `projects[].imageStoragePath`) to enable future deletion
-- Avatar path is deterministic: `{userId}/{siteId}/avatar.{ext}` (upsert)
-- Screenshot path includes timestamp: `{userId}/{siteId}/{timestamp}.{ext}`
+- Buckets: `avatars` (avatar images), `screenshots` (project screenshots)
+- Upload response returns `{ url, storagePath }` — pass both into `POST /sites` or `PUT /sites/:id` to attach the image to a site
+- Storage path format: `{userId}/{timestamp}.{ext}` — scoped to the authenticated user, no siteId dependency
+- This enables the **upload-first flow**: upload images → receive paths → create site in a single `POST /sites` call
 
 ### Supabase Client Usage
-Storage calls use a **per-request client** scoped to the user's JWT (`clientForUser(jwt)`) so that Supabase Storage RLS bucket policies are enforced natively. DB queries within StorageService (e.g. ownership check on `sites`) use `supabaseAdmin`.
+Storage calls use a **per-request client** scoped to the user's JWT (`clientForUser(jwt)`) so that Supabase Storage RLS bucket policies are enforced natively. There are no DB queries in `StorageService` — ownership is enforced solely via the `userId/` path prefix checked both in application code (`deleteFile`) and in bucket RLS policies.
 
 ### RLS Setup
 Bucket policies live in `supabase/migrations/storage_rls_policies.sql` — **must be applied manually in the Supabase SQL Editor** when setting up a new environment. Without them, storage bucket access is unrestricted.
