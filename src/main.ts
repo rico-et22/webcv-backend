@@ -28,6 +28,15 @@ async function bootstrap() {
 
   const config = app.get(ConfigService);
   const port = config.get<number>('PORT') ?? 3000;
+  const frontendUrl = config.get<string>('FRONTEND_URL') ?? 'http://localhost:5173';
+
+  // Enable CORS
+  app.enableCors({
+    origin: frontendUrl,
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    credentials: true,
+  });
+
   await app.listen(port);
 }
 bootstrap();

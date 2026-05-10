@@ -13,6 +13,7 @@ import { LoginDto } from './dto/login.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { RegisterDto } from './dto/register.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
+import { AuthResponseDto, RegisterResponseDto } from './dto/auth-response.dto';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -22,7 +23,7 @@ export class AuthController {
   @Public()
   @Post('register')
   @ApiOperation({ summary: 'Create a new user account' })
-  @ApiResponse({ status: 201, description: 'User registered successfully' })
+  @ApiResponse({ status: 201, description: 'User registered successfully', type: RegisterResponseDto })
   @ApiResponse({ status: 400, description: 'Validation error or email already in use' })
   register(@Body() dto: RegisterDto) {
     return this.authService.register(dto);
@@ -31,7 +32,7 @@ export class AuthController {
   @Public()
   @Post('login')
   @ApiOperation({ summary: 'Authenticate and receive a JWT' })
-  @ApiResponse({ status: 200, description: 'Login successful, returns access_token' })
+  @ApiResponse({ status: 200, description: 'Login successful, returns access_token', type: AuthResponseDto })
   @ApiResponse({ status: 401, description: 'Invalid credentials' })
   login(@Body() dto: LoginDto) {
     return this.authService.login(dto);
@@ -41,7 +42,7 @@ export class AuthController {
   @Post('refresh')
   @HttpCode(200)
   @ApiOperation({ summary: 'Refresh an expired access token' })
-  @ApiResponse({ status: 200, description: 'Token refreshed successfully, returns new access_token' })
+  @ApiResponse({ status: 200, description: 'Token refreshed successfully, returns new access_token', type: AuthResponseDto })
   @ApiResponse({ status: 401, description: 'Invalid or expired refresh token' })
   @ApiResponse({ status: 400, description: 'Validation error' })
   refreshToken(@Body() dto: RefreshTokenDto) {

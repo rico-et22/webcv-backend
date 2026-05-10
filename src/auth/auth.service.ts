@@ -4,6 +4,7 @@ import {
   Logger,
   UnauthorizedException,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { SupabaseService } from '../supabase/supabase.service';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { ConfirmResetDto } from './dto/confirm-reset.dto';
@@ -16,12 +17,20 @@ import { ResetPasswordDto } from './dto/reset-password.dto';
 export class AuthService {
   private readonly logger = new Logger(AuthService.name);
 
-  constructor(private readonly supabaseService: SupabaseService) {}
+  constructor(
+    private readonly supabaseService: SupabaseService,
+    private readonly configService: ConfigService,
+  ) {}
 
   async register(dto: RegisterDto) {
+    const frontendUrl = this.configService.get<string>('FRONTEND_URL') || 'http://localhost:5173';
+    
     const { data, error } = await this.supabaseService.supabase.auth.signUp({
       email: dto.email,
       password: dto.password,
+      options: {
+        emailRedirectTo: `${frontendUrl}/auth/callback`,
+      },
     });
 
     if (error) {
@@ -75,9 +84,14 @@ export class AuthService {
   }
 
   async resetPassword(dto: ResetPasswordDto) {
+    const frontendUrl = this.configService.get<string>('FRONTEND_URL') || 'http://localhost:5173';
+
     const { error } =
       await this.supabaseService.supabase.auth.resetPasswordForEmail(
         dto.email,
+        {
+          redirectTo: `${frontendUrl}/reset-password`,
+        }
       );
 
     if (error) {
