@@ -8,6 +8,7 @@ import { SupabaseService } from '../supabase/supabase.service';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { ConfirmResetDto } from './dto/confirm-reset.dto';
 import { LoginDto } from './dto/login.dto';
+import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { RegisterDto } from './dto/register.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 
@@ -50,6 +51,26 @@ export class AuthService {
         user: data.user,
       },
       message: 'Login successful',
+    };
+  }
+
+  async refreshToken(dto: RefreshTokenDto) {
+    const { data, error } = await this.supabaseService.supabase.auth.refreshSession({
+      refresh_token: dto.refreshToken,
+    });
+
+    if (error || !data.session) {
+      this.logger.warn(`Refresh token failed: ${error?.message || 'No session returned'}`);
+      throw new UnauthorizedException('Invalid or expired refresh token');
+    }
+
+    return {
+      data: {
+        access_token: data.session.access_token,
+        refresh_token: data.session.refresh_token,
+        user: data.user,
+      },
+      message: 'Token refreshed successfully',
     };
   }
 

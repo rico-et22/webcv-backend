@@ -10,6 +10,7 @@ import { AuthService } from './auth.service';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { ConfirmResetDto } from './dto/confirm-reset.dto';
 import { LoginDto } from './dto/login.dto';
+import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { RegisterDto } from './dto/register.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 
@@ -34,6 +35,17 @@ export class AuthController {
   @ApiResponse({ status: 401, description: 'Invalid credentials' })
   login(@Body() dto: LoginDto) {
     return this.authService.login(dto);
+  }
+
+  @Public()
+  @Post('refresh')
+  @HttpCode(200)
+  @ApiOperation({ summary: 'Refresh an expired access token' })
+  @ApiResponse({ status: 200, description: 'Token refreshed successfully, returns new access_token' })
+  @ApiResponse({ status: 401, description: 'Invalid or expired refresh token' })
+  @ApiResponse({ status: 400, description: 'Validation error' })
+  refreshToken(@Body() dto: RefreshTokenDto) {
+    return this.authService.refreshToken(dto);
   }
 
   @Public()
