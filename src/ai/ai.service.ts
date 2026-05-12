@@ -52,7 +52,7 @@ export class AiService {
     // 4. Gemini API call
     const apiKey = this.configService.getOrThrow<string>('GEMINI_API_KEY');
     const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: 'gemini-3.1-flash-lite-preview' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-3.1-flash-lite' });
 
     const base64Data = file.buffer.toString('base64');
 
