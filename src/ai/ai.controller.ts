@@ -19,6 +19,7 @@ import {
 } from '@nestjs/swagger';
 import { AiService } from './ai.service';
 import { AnalyzeCvResponseDto } from './dto/analyze-cv-response.dto';
+import { AnalyzeCvEnvelopeDto } from './dto/analyze-cv-envelope.dto';
 
 @ApiTags('ai')
 @ApiBearerAuth()
@@ -49,6 +50,7 @@ export class AiController {
   @ApiResponse({
     status: 200,
     description: 'CV analyzed — returns prefilled portfolio fields extracted from the PDF',
+    type: AnalyzeCvEnvelopeDto,
   })
   @ApiResponse({ status: 400, description: 'No file, wrong MIME type, file too large, or parse failure' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })

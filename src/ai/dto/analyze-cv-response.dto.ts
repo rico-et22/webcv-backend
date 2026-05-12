@@ -1,4 +1,4 @@
-import { PickType } from '@nestjs/mapped-types';
+import { PickType } from '@nestjs/swagger';
 import { CreateSiteDto } from '../../sites/dto/create-site.dto';
 
 export class AnalyzeCvResponseDto extends PickType(CreateSiteDto, [
