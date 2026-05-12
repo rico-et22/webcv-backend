@@ -18,6 +18,7 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { AiService } from './ai.service';
+import { AnalyzeCvResponseDto } from './dto/analyze-cv-response.dto';
 
 @ApiTags('ai')
 @ApiBearerAuth()
@@ -55,7 +56,7 @@ export class AiController {
   async analyzeCv(
     @Request() req: { user: { sub: string } },
     @UploadedFile() file: Express.Multer.File,
-  ) {
+  ): Promise<{ data: AnalyzeCvResponseDto; message: string }> {
     if (!file) {
       throw new Error('No file provided');
     }
