@@ -1,5 +1,11 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsNotEmpty, IsOptional, IsString, IsUrl } from 'class-validator';
+import {
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  IsUrl,
+  ValidateIf,
+} from 'class-validator';
 
 export class ProjectDto {
   @ApiProperty({ example: 'webCV' })
@@ -15,7 +21,7 @@ export class ProjectDto {
   description?: string;
 
   @ApiPropertyOptional({ example: 'https://github.com/kamilpawlak/webcv' })
-  @IsOptional()
+  @ValidateIf((_, value) => value !== undefined && value !== '')
   @IsUrl()
   url?: string;
 

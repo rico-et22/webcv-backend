@@ -3,27 +3,27 @@ import { IsEmail, IsString, IsUrl, ValidateIf } from 'class-validator';
 
 export class ContactDto {
   @ApiPropertyOptional({ example: 'kamil@example.com' })
-  @ValidateIf((o) => o.email !== undefined && o.email !== '')
+  @ValidateIf((_, value) => value !== undefined && value !== '')
   @IsEmail()
   email?: string;
 
   @ApiPropertyOptional({ example: '+48 123 456 789' })
-  @ValidateIf((o) => o.phone !== undefined && o.phone !== '')
+  @ValidateIf((_, value) => value !== undefined && value !== '')
   @IsString()
   phone?: string;
 
   @ApiPropertyOptional({ example: 'https://linkedin.com/in/kamilpawlak' })
-  @ValidateIf((o) => o.linkedin !== undefined && o.linkedin !== '')
+  @ValidateIf((_, value) => value !== undefined && value !== '')
   @IsUrl()
   linkedin?: string;
 
   @ApiPropertyOptional({ example: 'https://github.com/kamilpawlak' })
-  @ValidateIf((o) => o.github !== undefined && o.github !== '')
+  @ValidateIf((_, value) => value !== undefined && value !== '')
   @IsUrl()
   github?: string;
 
   @ApiPropertyOptional({ example: 'https://kamilpawlak.com' })
-  @ValidateIf((o) => o.website !== undefined && o.website !== '')
+  @ValidateIf((_, value) => value !== undefined && value !== '')
   @IsUrl()
   website?: string;
 }
