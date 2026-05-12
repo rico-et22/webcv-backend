@@ -6,13 +6,13 @@ export class SiteResponseDto extends CreateSiteDto {
   id: string;
 
   @ApiProperty({ example: '123e4567-e89b-12d3-a456-426614174000' })
-  user_id: string;
+  userId: string;
 
   @ApiProperty({ example: '2026-01-01T12:00:00Z' })
-  created_at: string;
+  createdAt: string;
 
   @ApiProperty({ example: '2026-01-01T12:00:00Z' })
-  updated_at: string;
+  updatedAt: string;
 }
 
 export class SiteSummaryResponseDto {
@@ -20,17 +20,17 @@ export class SiteSummaryResponseDto {
   id: string;
 
   @ApiProperty({ example: 'Kamil Pawlak' })
-  full_name: string;
+  fullName: string;
 
   @ApiProperty({ example: 'Full-Stack Developer', required: false })
-  job_title?: string;
+  jobTitle?: string;
 
   @ApiProperty({ example: 'https://example.com/avatar.png', required: false })
-  avatar_url?: string;
+  avatarUrl?: string;
 
   @ApiProperty({ example: '2026-01-01T12:00:00Z' })
-  created_at: string;
+  createdAt: string;
 
   @ApiProperty({ example: '2026-01-01T12:00:00Z' })
-  updated_at: string;
+  updatedAt: string;
 }

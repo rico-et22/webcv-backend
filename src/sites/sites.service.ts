@@ -35,6 +35,42 @@ export class SitesService {
     return row;
   }
 
+  /** Map snake_case DB columns to camelCase DTO fields for full site response */
+  /* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access */
+  private fromDbRow(row: any) {
+    return {
+      id: row.id,
+      userId: row.user_id,
+      fullName: row.full_name,
+      jobTitle: row.job_title,
+      location: row.location,
+      bio: row.bio,
+      avatarUrl: row.avatar_url,
+      avatarStoragePath: row.avatar_storage_path,
+      contacts: row.contacts,
+      skills: row.skills,
+      experience: row.experience,
+      education: row.education,
+      projects: row.projects,
+      achievements: row.achievements,
+      createdAt: row.created_at,
+      updatedAt: row.updated_at,
+    };
+  }
+
+  /** Map snake_case DB columns to camelCase DTO fields for site summary response */
+  private fromDbSummaryRow(row: any) {
+    return {
+      id: row.id,
+      fullName: row.full_name,
+      jobTitle: row.job_title,
+      avatarUrl: row.avatar_url,
+      createdAt: row.created_at,
+      updatedAt: row.updated_at,
+    };
+  }
+  /* eslint-enable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access */
+
   // ------------------------------------------------------------------ create
 
   async create(userId: string, dto: CreateSiteDto) {
@@ -51,7 +87,10 @@ export class SitesService {
       throw new Error(error.message);
     }
 
-    return { data, message: 'Portfolio created successfully' };
+    return {
+      data: this.fromDbRow(data),
+      message: 'Portfolio created successfully',
+    };
   }
 
   // ------------------------------------------------------------------ findAll
@@ -70,7 +109,10 @@ export class SitesService {
       throw new Error(error.message);
     }
 
-    return { data, message: 'Portfolios retrieved successfully' };
+    return {
+      data: data.map((row) => this.fromDbSummaryRow(row)),
+      message: 'Portfolios retrieved successfully',
+    };
   }
 
   // ------------------------------------------------------------------ findOne
@@ -90,7 +132,10 @@ export class SitesService {
       throw new ForbiddenException('You do not have access to this portfolio');
     }
 
-    return { data, message: 'Portfolio retrieved successfully' };
+    return {
+      data: this.fromDbRow(data),
+      message: 'Portfolio retrieved successfully',
+    };
   }
 
   // ------------------------------------------------------------------ update
@@ -112,7 +157,10 @@ export class SitesService {
       throw new Error(error.message);
     }
 
-    return { data, message: 'Portfolio updated successfully' };
+    return {
+      data: this.fromDbRow(data),
+      message: 'Portfolio updated successfully',
+    };
   }
 
   // ------------------------------------------------------------------ remove
