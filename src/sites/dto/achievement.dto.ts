@@ -7,7 +7,9 @@ export class AchievementDto {
   @IsNotEmpty()
   title: string;
 
-  @ApiPropertyOptional({ example: 'Built a real-time collaboration tool in 24h.' })
+  @ApiPropertyOptional({
+    example: 'Built a real-time collaboration tool in 24h.',
+  })
   @IsOptional()
   @IsString()
   description?: string;

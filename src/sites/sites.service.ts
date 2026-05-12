@@ -24,7 +24,8 @@ export class SitesService {
     if (dto.location !== undefined) row.location = dto.location;
     if (dto.bio !== undefined) row.bio = dto.bio;
     if (dto.avatarUrl !== undefined) row.avatar_url = dto.avatarUrl;
-    if (dto.avatarStoragePath !== undefined) row.avatar_storage_path = dto.avatarStoragePath;
+    if (dto.avatarStoragePath !== undefined)
+      row.avatar_storage_path = dto.avatarStoragePath;
     if (dto.contacts !== undefined) row.contacts = dto.contacts;
     if (dto.skills !== undefined) row.skills = dto.skills;
     if (dto.experience !== undefined) row.experience = dto.experience;
@@ -44,7 +45,9 @@ export class SitesService {
       .single();
 
     if (error) {
-      this.logger.error(`Failed to create site for user ${userId}: ${error.message}`);
+      this.logger.error(
+        `Failed to create site for user ${userId}: ${error.message}`,
+      );
       throw new Error(error.message);
     }
 
@@ -61,7 +64,9 @@ export class SitesService {
       .order('created_at', { ascending: false });
 
     if (error) {
-      this.logger.error(`Failed to fetch sites for user ${userId}: ${error.message}`);
+      this.logger.error(
+        `Failed to fetch sites for user ${userId}: ${error.message}`,
+      );
       throw new Error(error.message);
     }
 

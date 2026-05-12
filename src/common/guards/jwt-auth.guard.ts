@@ -72,7 +72,7 @@ export class JwtAuthGuard implements CanActivate {
         return reject(new Error('Could not decode token'));
       }
 
-      const kid = decoded.header.kid as string | undefined;
+      const kid = decoded.header.kid;
 
       const getKey: jwt.GetPublicKeyOrSecret = (header, callback) => {
         if (!header.kid) {
@@ -86,7 +86,11 @@ export class JwtAuthGuard implements CanActivate {
 
       jwt.verify(
         token,
-        kid ? getKey : (() => { throw new Error('Missing kid'); }),
+        kid
+          ? getKey
+          : () => {
+              throw new Error('Missing kid');
+            },
         { algorithms: ['ES256', 'RS256'] },
         (err, payload) => {
           if (err) return reject(err);

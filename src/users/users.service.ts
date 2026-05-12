@@ -1,4 +1,9 @@
-import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common';
 import { SupabaseService } from '../supabase/supabase.service';
 import { UpdateUserDto } from './dto/update-user.dto';
 
@@ -21,9 +26,13 @@ export class UsersService {
   }
 
   async update(userId: string, dto: UpdateUserDto) {
-    const { data, error } = await this.supabaseService.supabaseAdmin.auth.admin.updateUserById(userId, {
-      email: dto.email,
-    });
+    const { data, error } =
+      await this.supabaseService.supabaseAdmin.auth.admin.updateUserById(
+        userId,
+        {
+          email: dto.email,
+        },
+      );
 
     if (error) {
       this.logger.error(`Error updating user ${userId}: ${error.message}`);
@@ -36,7 +45,8 @@ export class UsersService {
   }
 
   async deleteAccount(userId: string) {
-    const { error } = await this.supabaseService.supabaseAdmin.auth.admin.deleteUser(userId);
+    const { error } =
+      await this.supabaseService.supabaseAdmin.auth.admin.deleteUser(userId);
 
     if (error) {
       this.logger.error(`Error deleting user ${userId}: ${error.message}`);

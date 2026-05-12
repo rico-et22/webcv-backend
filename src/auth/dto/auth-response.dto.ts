@@ -43,6 +43,8 @@ export class RegisterResponseDto {
   @ApiProperty({ type: AuthUserDto })
   data: AuthUserDto;
 
-  @ApiProperty({ example: 'Registration successful. Please verify your email.' })
+  @ApiProperty({
+    example: 'Registration successful. Please verify your email.',
+  })
   message: string;
 }

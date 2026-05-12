@@ -30,7 +30,9 @@ export class CreateSiteDto {
   @IsString()
   location?: string;
 
-  @ApiPropertyOptional({ example: 'Passionate developer with 3+ years of experience...' })
+  @ApiPropertyOptional({
+    example: 'Passionate developer with 3+ years of experience...',
+  })
   @IsOptional()
   @IsString()
   bio?: string;

@@ -18,7 +18,10 @@ import {
   getSchemaPath,
 } from '@nestjs/swagger';
 import { CreateSiteDto } from './dto/create-site.dto';
-import { SiteResponseDto, SiteSummaryResponseDto } from './dto/site-responses.dto';
+import {
+  SiteResponseDto,
+  SiteSummaryResponseDto,
+} from './dto/site-responses.dto';
 import { UpdateSiteDto } from './dto/update-site.dto';
 import { SitesService } from './sites.service';
 
@@ -65,7 +68,10 @@ export class SitesController {
           type: 'array',
           items: { $ref: getSchemaPath(SiteSummaryResponseDto) },
         },
-        message: { type: 'string', example: 'Portfolios retrieved successfully' },
+        message: {
+          type: 'string',
+          example: 'Portfolios retrieved successfully',
+        },
       },
     },
   })
@@ -85,17 +91,20 @@ export class SitesController {
     schema: {
       properties: {
         data: { $ref: getSchemaPath(SiteResponseDto) },
-        message: { type: 'string', example: 'Portfolio retrieved successfully' },
+        message: {
+          type: 'string',
+          example: 'Portfolio retrieved successfully',
+        },
       },
     },
   })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @ApiResponse({ status: 403, description: 'Forbidden — site belongs to another user' })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden — site belongs to another user',
+  })
   @ApiResponse({ status: 404, description: 'Portfolio not found' })
-  findOne(
-    @Request() req: { user: { sub: string } },
-    @Param('id') id: string,
-  ) {
+  findOne(@Request() req: { user: { sub: string } }, @Param('id') id: string) {
     return this.sitesService.findOne(req.user.sub, id);
   }
 
@@ -116,7 +125,10 @@ export class SitesController {
   })
   @ApiResponse({ status: 400, description: 'Validation error' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @ApiResponse({ status: 403, description: 'Forbidden — site belongs to another user' })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden — site belongs to another user',
+  })
   @ApiResponse({ status: 404, description: 'Portfolio not found' })
   update(
     @Request() req: { user: { sub: string } },
@@ -133,12 +145,12 @@ export class SitesController {
   @ApiParam({ name: 'id', description: 'Portfolio site UUID' })
   @ApiResponse({ status: 200, description: 'Portfolio deleted successfully' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @ApiResponse({ status: 403, description: 'Forbidden — site belongs to another user' })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden — site belongs to another user',
+  })
   @ApiResponse({ status: 404, description: 'Portfolio not found' })
-  remove(
-    @Request() req: { user: { sub: string } },
-    @Param('id') id: string,
-  ) {
+  remove(@Request() req: { user: { sub: string } }, @Param('id') id: string) {
     return this.sitesService.remove(req.user.sub, id);
   }
 }

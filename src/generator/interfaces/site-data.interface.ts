@@ -1,6 +1,8 @@
 import { CreateSiteDto } from '../../sites/dto/create-site.dto';
 
-export type SiteData = Omit<CreateSiteDto, 'avatarStoragePath'> & { id: string };
+export type SiteData = Omit<CreateSiteDto, 'avatarStoragePath'> & {
+  id: string;
+};
 
 /** Generates `has${Capitalize<K>}: boolean` for every optional key K in T. */
 type HasFlags<T> = {

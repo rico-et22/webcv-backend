@@ -32,7 +32,10 @@ export class AiController {
   @Post('analyze-cv')
   @HttpCode(HttpStatus.OK)
   @UseInterceptors(FileInterceptor('file'))
-  @ApiOperation({ summary: 'Parse a PDF CV and return prefilled portfolio data using Gemini AI' })
+  @ApiOperation({
+    summary:
+      'Parse a PDF CV and return prefilled portfolio data using Gemini AI',
+  })
   @ApiConsumes('multipart/form-data')
   @ApiBody({
     schema: {
@@ -49,12 +52,19 @@ export class AiController {
   })
   @ApiResponse({
     status: 200,
-    description: 'CV analyzed — returns prefilled portfolio fields extracted from the PDF',
+    description:
+      'CV analyzed — returns prefilled portfolio fields extracted from the PDF',
     type: AnalyzeCvEnvelopeDto,
   })
-  @ApiResponse({ status: 400, description: 'No file, wrong MIME type, file too large, or parse failure' })
+  @ApiResponse({
+    status: 400,
+    description: 'No file, wrong MIME type, file too large, or parse failure',
+  })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @ApiResponse({ status: 429, description: 'Rate limit: wait 30s between calls' })
+  @ApiResponse({
+    status: 429,
+    description: 'Rate limit: wait 30s between calls',
+  })
   async analyzeCv(
     @Request() req: { user: { sub: string } },
     @UploadedFile() file: Express.Multer.File,

@@ -67,15 +67,24 @@ export class StorageController {
     description: 'File uploaded successfully',
     type: UploadResponseDto,
   })
-  @ApiResponse({ status: 400, description: 'No file provided, invalid type/size, or invalid bucket' })
+  @ApiResponse({
+    status: 400,
+    description: 'No file provided, invalid type/size, or invalid bucket',
+  })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async upload(
-    @Request() req: { user: { sub: string }; headers: { authorization: string } },
+    @Request()
+    req: { user: { sub: string }; headers: { authorization: string } },
     @UploadedFile() file: Express.Multer.File,
     @Body() dto: UploadFileDto,
   ) {
     const jwt = req.headers.authorization.replace('Bearer ', '');
-    const result = await this.storageService.uploadFile(req.user.sub, jwt, dto.bucket, file);
+    const result = await this.storageService.uploadFile(
+      req.user.sub,
+      jwt,
+      dto.bucket,
+      file,
+    );
     return { data: result, message: 'File uploaded successfully' };
   }
 
@@ -83,18 +92,29 @@ export class StorageController {
 
   @Delete('file')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Delete a file from storage by its path and bucket' })
+  @ApiOperation({
+    summary: 'Delete a file from storage by its path and bucket',
+  })
   @ApiBody({ type: DeleteFileDto })
   @ApiResponse({ status: 200, description: 'File deleted successfully' })
   @ApiResponse({ status: 400, description: 'Delete failed' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @ApiResponse({ status: 403, description: 'You do not have permission to delete this file' })
+  @ApiResponse({
+    status: 403,
+    description: 'You do not have permission to delete this file',
+  })
   async deleteFile(
-    @Request() req: { user: { sub: string }; headers: { authorization: string } },
+    @Request()
+    req: { user: { sub: string }; headers: { authorization: string } },
     @Body() dto: DeleteFileDto,
   ) {
     const jwt = req.headers.authorization.replace('Bearer ', '');
-    await this.storageService.deleteFile(req.user.sub, jwt, dto.bucket, dto.path);
+    await this.storageService.deleteFile(
+      req.user.sub,
+      jwt,
+      dto.bucket,
+      dto.path,
+    );
     return { message: 'File deleted successfully' };
   }
 }

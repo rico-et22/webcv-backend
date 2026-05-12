@@ -7,7 +7,10 @@ import {
   ServiceUnavailableException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { GoogleGenerativeAI, GoogleGenerativeAIFetchError } from '@google/generative-ai';
+import {
+  GoogleGenerativeAI,
+  GoogleGenerativeAIFetchError,
+} from '@google/generative-ai';
 import { AnalyzeCvResponseDto } from './dto/analyze-cv-response.dto';
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
@@ -42,7 +45,9 @@ export class AiService {
     const lastCall = this.cooldownMap.get(userId);
     const now = Date.now();
     if (lastCall !== undefined && now - lastCall < COOLDOWN_MS) {
-      const remainingSeconds = Math.ceil((COOLDOWN_MS - (now - lastCall)) / 1000);
+      const remainingSeconds = Math.ceil(
+        (COOLDOWN_MS - (now - lastCall)) / 1000,
+      );
       throw new HttpException(
         `Rate limit exceeded. Please wait ${remainingSeconds}s before analyzing another CV`,
         HttpStatus.TOO_MANY_REQUESTS,
@@ -92,7 +97,9 @@ Required JSON structure (all fields optional — include only what you can confi
   ]
 }`;
 
-    this.logger.log(`Sending CV to Gemini for user ${userId} (${file.size} bytes)`);
+    this.logger.log(
+      `Sending CV to Gemini for user ${userId} (${file.size} bytes)`,
+    );
 
     let result: Awaited<ReturnType<typeof model.generateContent>>;
     try {
@@ -107,7 +114,9 @@ Required JSON structure (all fields optional — include only what you can confi
       ]);
     } catch (err) {
       if (err instanceof GoogleGenerativeAIFetchError) {
-        this.logger.error(`Gemini API error for user ${userId}: [${err.status}] ${err.message}`);
+        this.logger.error(
+          `Gemini API error for user ${userId}: [${err.status}] ${err.message}`,
+        );
         if (err.status === 429) {
           throw new HttpException(
             'Gemini API quota exceeded. Please try again later.',
@@ -126,15 +135,22 @@ Required JSON structure (all fields optional — include only what you can confi
     const text = result.response.text().trim();
 
     // Strip markdown code fences if model wraps the JSON (e.g. ```json ... ```)
-    const cleaned = text.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '').trim();
+    const cleaned = text
+      .replace(/^```(?:json)?\s*/i, '')
+      .replace(/\s*```$/, '')
+      .trim();
 
     // 5. Parse Gemini response
     let parsed: AnalyzeCvResponseDto;
     try {
       parsed = JSON.parse(cleaned) as AnalyzeCvResponseDto;
     } catch {
-      this.logger.error(`Gemini returned non-JSON response for user ${userId}: ${cleaned.slice(0, 200)}`);
-      throw new BadRequestException('Failed to parse CV analysis result. Please try again.');
+      this.logger.error(
+        `Gemini returned non-JSON response for user ${userId}: ${cleaned.slice(0, 200)}`,
+      );
+      throw new BadRequestException(
+        'Failed to parse CV analysis result. Please try again.',
+      );
     }
 
     // Update cooldown timestamp on success

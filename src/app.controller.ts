@@ -4,10 +4,7 @@ import { Controller, Get, Header } from '@nestjs/common';
 import { ApiExcludeController } from '@nestjs/swagger';
 import { Public } from './common/decorators/public.decorator';
 
-const HTML_PAGE = readFileSync(
-  join(__dirname, 'auth-callback.html'),
-  'utf-8',
-);
+const HTML_PAGE = readFileSync(join(__dirname, 'auth-callback.html'), 'utf-8');
 
 @ApiExcludeController()
 @Controller()

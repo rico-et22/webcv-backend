@@ -23,8 +23,9 @@ export class AuthService {
   ) {}
 
   async register(dto: RegisterDto) {
-    const frontendUrl = this.configService.get<string>('FRONTEND_URL') || 'http://localhost:5173';
-    
+    const frontendUrl =
+      this.configService.get<string>('FRONTEND_URL') || 'http://localhost:5173';
+
     const { data, error } = await this.supabaseService.supabase.auth.signUp({
       email: dto.email,
       password: dto.password,
@@ -38,7 +39,10 @@ export class AuthService {
       throw new BadRequestException(error.message);
     }
 
-    return { data: data.user, message: 'Registration successful. Please verify your email.' };
+    return {
+      data: data.user,
+      message: 'Registration successful. Please verify your email.',
+    };
   }
 
   async login(dto: LoginDto) {
@@ -64,12 +68,15 @@ export class AuthService {
   }
 
   async refreshToken(dto: RefreshTokenDto) {
-    const { data, error } = await this.supabaseService.supabase.auth.refreshSession({
-      refresh_token: dto.refreshToken,
-    });
+    const { data, error } =
+      await this.supabaseService.supabase.auth.refreshSession({
+        refresh_token: dto.refreshToken,
+      });
 
     if (error || !data.session) {
-      this.logger.warn(`Refresh token failed: ${error?.message || 'No session returned'}`);
+      this.logger.warn(
+        `Refresh token failed: ${error?.message || 'No session returned'}`,
+      );
       throw new UnauthorizedException('Invalid or expired refresh token');
     }
 
@@ -84,48 +91,63 @@ export class AuthService {
   }
 
   async resetPassword(dto: ResetPasswordDto) {
-    const frontendUrl = this.configService.get<string>('FRONTEND_URL') || 'http://localhost:5173';
+    const frontendUrl =
+      this.configService.get<string>('FRONTEND_URL') || 'http://localhost:5173';
 
     const { error } =
       await this.supabaseService.supabase.auth.resetPasswordForEmail(
         dto.email,
         {
           redirectTo: `${frontendUrl}/reset-password`,
-        }
+        },
       );
 
     if (error) {
-      this.logger.warn(`Password reset failed for ${dto.email}: ${error.message}`);
+      this.logger.warn(
+        `Password reset failed for ${dto.email}: ${error.message}`,
+      );
       throw new BadRequestException(error.message);
     }
 
     // Always return a generic message to avoid email enumeration
-    return { data: null, message: 'If this email is registered, a reset link has been sent.' };
+    return {
+      data: null,
+      message: 'If this email is registered, a reset link has been sent.',
+    };
   }
 
   async confirmReset(dto: ConfirmResetDto) {
     // Validate the recovery token and extract the user
-    const { data, error } = await this.supabaseService.supabase.auth.getUser(dto.accessToken);
+    const { data, error } = await this.supabaseService.supabase.auth.getUser(
+      dto.accessToken,
+    );
 
     if (error || !data.user) {
       throw new UnauthorizedException('Invalid or expired reset token');
     }
 
     // Update the password using the admin API
-    const { error: updateError } = await this.supabaseService.supabaseAdmin.auth.admin.updateUserById(
-      data.user.id,
-      { password: dto.newPassword },
-    );
+    const { error: updateError } =
+      await this.supabaseService.supabaseAdmin.auth.admin.updateUserById(
+        data.user.id,
+        { password: dto.newPassword },
+      );
 
     if (updateError) {
-      this.logger.error(`Password reset failed for user ${data.user.id}: ${updateError.message}`);
+      this.logger.error(
+        `Password reset failed for user ${data.user.id}: ${updateError.message}`,
+      );
       throw new BadRequestException(updateError.message);
     }
 
     return { data: null, message: 'Password reset successfully' };
   }
 
-  async changePassword(userId: string, userEmail: string, dto: ChangePasswordDto) {
+  async changePassword(
+    userId: string,
+    userEmail: string,
+    dto: ChangePasswordDto,
+  ) {
     // Step 1: Verify current password via signIn
     const { error: verifyError } =
       await this.supabaseService.supabase.auth.signInWithPassword({
@@ -139,12 +161,17 @@ export class AuthService {
 
     // Step 2: Update to new password using admin API
     const { error: updateError } =
-      await this.supabaseService.supabaseAdmin.auth.admin.updateUserById(userId, {
-        password: dto.newPassword,
-      });
+      await this.supabaseService.supabaseAdmin.auth.admin.updateUserById(
+        userId,
+        {
+          password: dto.newPassword,
+        },
+      );
 
     if (updateError) {
-      this.logger.error(`Password update failed for user ${userId}: ${updateError.message}`);
+      this.logger.error(
+        `Password update failed for user ${userId}: ${updateError.message}`,
+      );
       throw new BadRequestException(updateError.message);
     }
 

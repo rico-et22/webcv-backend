@@ -6,7 +6,12 @@ import {
 } from '@nestjs/common';
 import { SupabaseService } from '../supabase/supabase.service';
 
-const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+const ALLOWED_MIME_TYPES = [
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+  'image/gif',
+];
 const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50 MB
 const VALID_BUCKETS = ['avatars', 'screenshots'] as const;
 
@@ -64,20 +69,25 @@ export class StorageService {
     const ext = this.getExtension(file.mimetype);
     const storagePath = `${userId}/${Date.now()}.${ext}`;
 
-    const { error } = await this.supabaseService.clientForUser(jwt).storage
-      .from(bucket)
+    const { error } = await this.supabaseService
+      .clientForUser(jwt)
+      .storage.from(bucket)
       .upload(storagePath, file.buffer, {
         contentType: file.mimetype,
         upsert: false,
       });
 
     if (error) {
-      this.logger.error(`Upload failed (${bucket}/${storagePath}): ${error.message}`);
+      this.logger.error(
+        `Upload failed (${bucket}/${storagePath}): ${error.message}`,
+      );
       throw new BadRequestException(`Upload failed: ${error.message}`);
     }
 
     const url = this.getPublicUrl(bucket, storagePath);
-    this.logger.log(`File uploaded by user ${userId}: ${bucket}/${storagePath}`);
+    this.logger.log(
+      `File uploaded by user ${userId}: ${bucket}/${storagePath}`,
+    );
     return { url, storagePath };
   }
 
@@ -91,15 +101,20 @@ export class StorageService {
   ): Promise<void> {
     // Ensure users can only delete their own files
     if (!path.startsWith(`${userId}/`)) {
-      throw new ForbiddenException('You do not have permission to delete this file');
+      throw new ForbiddenException(
+        'You do not have permission to delete this file',
+      );
     }
 
-    const { error } = await this.supabaseService.clientForUser(jwt).storage
-      .from(bucket)
+    const { error } = await this.supabaseService
+      .clientForUser(jwt)
+      .storage.from(bucket)
       .remove([path]);
 
     if (error) {
-      this.logger.error(`File deletion failed (${bucket}/${path}): ${error.message}`);
+      this.logger.error(
+        `File deletion failed (${bucket}/${path}): ${error.message}`,
+      );
       throw new BadRequestException(`Delete failed: ${error.message}`);
     }
 

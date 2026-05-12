@@ -26,7 +26,10 @@ export class UsersController {
     schema: {
       properties: {
         data: { $ref: getSchemaPath(UserResponseDto) },
-        message: { type: 'string', example: 'User profile retrieved successfully' },
+        message: {
+          type: 'string',
+          example: 'User profile retrieved successfully',
+        },
       },
     },
   })

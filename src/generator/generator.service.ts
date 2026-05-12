@@ -29,7 +29,8 @@ export class GeneratorService {
   private readonly styleTpl: Handlebars.TemplateDelegate;
   private readonly scriptTpl: Handlebars.TemplateDelegate;
   private readonly fontDataUri: string;
-  private readonly fontRelativePath = 'assets/fonts/inter-latin-wght-normal.woff2';
+  private readonly fontRelativePath =
+    'assets/fonts/inter-latin-wght-normal.woff2';
 
   constructor(
     private readonly supabaseService: SupabaseService,
@@ -50,7 +51,11 @@ export class GeneratorService {
   }
 
   private loadFontAsDataUri(): string {
-    const fontPath = path.join(__dirname, 'fonts', 'inter-latin-wght-normal.woff2');
+    const fontPath = path.join(
+      __dirname,
+      'fonts',
+      'inter-latin-wght-normal.woff2',
+    );
     const buffer = fs.readFileSync(fontPath);
     return `data:font/woff2;base64,${buffer.toString('base64')}`;
   }
@@ -81,7 +86,10 @@ export class GeneratorService {
       'contact',
     ];
     for (const name of partials) {
-      Handlebars.registerPartial(name, this.readTemplate('partials', `${name}.hbs`));
+      Handlebars.registerPartial(
+        name,
+        this.readTemplate('partials', `${name}.hbs`),
+      );
     }
   }
 
@@ -130,11 +138,15 @@ export class GeneratorService {
     inlineCss?: string,
     inlineJs?: string,
   ): TemplateContext {
-    const hasExperience = Array.isArray(site.experience) && site.experience.length > 0;
-    const hasEducation = Array.isArray(site.education) && site.education.length > 0;
+    const hasExperience =
+      Array.isArray(site.experience) && site.experience.length > 0;
+    const hasEducation =
+      Array.isArray(site.education) && site.education.length > 0;
     const hasSkills = Array.isArray(site.skills) && site.skills.length > 0;
-    const hasProjects = Array.isArray(site.projects) && site.projects.length > 0;
-    const hasAchievements = Array.isArray(site.achievements) && site.achievements.length > 0;
+    const hasProjects =
+      Array.isArray(site.projects) && site.projects.length > 0;
+    const hasAchievements =
+      Array.isArray(site.achievements) && site.achievements.length > 0;
 
     const contacts = site.contacts ?? {};
     const hasContacts = !!(
@@ -176,7 +188,9 @@ export class GeneratorService {
   };
 
   /** Fetches an image URL. Returns null on any error. */
-  private async fetchImage(url: string): Promise<{ buffer: Buffer; contentType: string } | null> {
+  private async fetchImage(
+    url: string,
+  ): Promise<{ buffer: Buffer; contentType: string } | null> {
     try {
       const res = await fetch(url);
       if (!res.ok) return null;
@@ -184,7 +198,9 @@ export class GeneratorService {
       const buffer = Buffer.from(await res.arrayBuffer());
       return { buffer, contentType };
     } catch (err) {
-      this.logger.warn(`Failed to fetch image ${url}: ${(err as Error).message}`);
+      this.logger.warn(
+        `Failed to fetch image ${url}: ${(err as Error).message}`,
+      );
       return null;
     }
   }
@@ -218,7 +234,10 @@ export class GeneratorService {
    * Fetches remote images, appends them to the archive as local files,
    * and returns a site data clone with updated local paths (ZIP mode).
    */
-  private async bundleImages(site: SiteData, archive: Archiver): Promise<SiteData> {
+  private async bundleImages(
+    site: SiteData,
+    archive: Archiver,
+  ): Promise<SiteData> {
     const clone = { ...site };
 
     if (clone.avatarUrl) {
@@ -260,7 +279,11 @@ export class GeneratorService {
     return this.indexTpl(context);
   }
 
-  async generateZip(userId: string, siteId: string, res: express.Response): Promise<void> {
+  async generateZip(
+    userId: string,
+    siteId: string,
+    res: express.Response,
+  ): Promise<void> {
     const site = await this.fetchSite(userId, siteId);
 
     res.setHeader('Content-Type', 'application/zip');
@@ -283,13 +306,19 @@ export class GeneratorService {
     const context = this.prepareSiteContext(bundledSite, false);
     const html = this.indexTpl(context);
 
-    const fontPath = path.join(__dirname, 'fonts', 'inter-latin-wght-normal.woff2');
+    const fontPath = path.join(
+      __dirname,
+      'fonts',
+      'inter-latin-wght-normal.woff2',
+    );
     const fontBuffer = fs.readFileSync(fontPath);
 
     archive.append(html, { name: 'index.html' });
     archive.append(css, { name: 'style.css' });
     archive.append(js, { name: 'script.js' });
-    archive.append(fontBuffer, { name: 'assets/fonts/inter-latin-wght-normal.woff2' });
+    archive.append(fontBuffer, {
+      name: 'assets/fonts/inter-latin-wght-normal.woff2',
+    });
 
     await archive.finalize();
   }
