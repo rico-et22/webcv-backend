@@ -96,13 +96,6 @@ To run the application via Docker:
 5. **Access API Documentation**
    Once the application is running, the Swagger API documentation will be available (typically at `/api` or `/swagger`, depending on your bootstrap configuration).
 
-## AI Co-Development
-
-This application was co-developed using Agentic AI coding assistants.
-
-- **AI Models:** Gemini 3.1 Pro, Claude Sonnet/Opus 4.6
-- **AI Agents/Environments:** Google Antigravity, Claude Code
-
 ## Acknowledgments & Licensing
 
 This project is licensed under the MIT License.
@@ -111,3 +104,10 @@ Special thanks to the following open-source resources that inspired or are inclu
 
 - **[Inter Font](https://rsms.me/inter/):** Used within the generated web portfolios. Inter is licensed under the SIL Open Font License (OFL).
 - **[Magic UI](https://magicui.design/):** The design and aesthetic of the generated portfolios take heavy inspiration from Magic UI's stunning modern templates.
+
+### AI Co-Development
+
+This application was co-developed using Agentic AI coding assistants.
+
+- **AI Models:** Gemini 3.1 Pro, Claude Sonnet/Opus 4.6
+- **AI Agents/Environments:** Google Antigravity, Claude Code
