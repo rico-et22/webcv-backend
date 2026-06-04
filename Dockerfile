@@ -3,8 +3,8 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# Enable pnpm
-RUN corepack enable && corepack prepare pnpm@latest --activate
+# Enable pnpm (pin to v9 to match lockfileVersion 9.0)
+RUN corepack enable && corepack prepare pnpm@9 --activate
 
 # Copy package files first to leverage Docker layer caching
 COPY package.json pnpm-lock.yaml ./
@@ -23,8 +23,8 @@ FROM node:20-alpine AS production
 
 WORKDIR /app
 
-# Enable pnpm
-RUN corepack enable && corepack prepare pnpm@latest --activate
+# Enable pnpm (pin to v9 to match lockfileVersion 9.0)
+RUN corepack enable && corepack prepare pnpm@9 --activate
 
 # Set node environment to production
 ENV NODE_ENV=production
