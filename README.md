@@ -15,7 +15,7 @@ This application is built with a focus on strict typing, stateless file handling
 - **Database:** PostgreSQL via Supabase
 - **Storage:** Supabase Storage
 - **Authentication:** Supabase Auth / JWT
-- **AI Integration:** Google Gemini API
+- **AI Integration:** Azure AI Foundry (GPT-4.1-mini, Foundry is GDPR-friendly if the deployment's resource location is in the EU & set to "Standard" - NOT "Global Standard")
 - **API Documentation:** `@nestjs/swagger`
 - **Validation:** `class-validator` + `class-transformer`
 - **File Export:** `archiver` (in-memory ZIP streaming)
@@ -79,7 +79,7 @@ To run the application via Docker:
    ```
 
    - `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`
-   - `GEMINI_API_KEY`
+   - `AZURE_OPENAI_API_KEY`, `AZURE_OPENAI_ENDPOINT`, `AZURE_OPENAI_API_VERSION`, `AZURE_OPENAI_DEPLOYMENT`
    - `JWT_SECRET` (from Supabase dashboard)
    - `PORT` (defaults to 3000)
 
@@ -107,7 +107,7 @@ Special thanks to the following open-source resources that inspired or are inclu
 
 ### AI Co-Development
 
-This application was co-developed using Agentic AI coding assistants.
+The following Agentic AI coding assistants provided support during the development process:
 
 - **AI Models:** Gemini 3.1 Pro, Claude Sonnet/Opus 4.6
 - **AI Agents/Environments:** Google Antigravity, Claude Code

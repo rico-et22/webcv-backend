@@ -16,7 +16,7 @@ Core philosophy: **user independence** — no vendor lock-in, users own their ge
 | Database | PostgreSQL via Supabase |
 | Storage | Supabase Storage |
 | Authentication | Supabase Auth / JWT |
-| AI Integration | Google Gemini API |
+| AI Integration | Azure AI Foundry (GPT-4.1-mini) |
 | API Docs | `@nestjs/swagger` |
 | Validation | `class-validator` + `class-transformer` |
 | File export | `archiver` (in-memory ZIP streaming) |
@@ -80,7 +80,7 @@ Every controller, endpoint, and DTO must be fully decorated:
 
 ### 2. Stateless File Handling
 - **Images** (avatars, portfolio screenshots) → Supabase Storage only.
-- **PDF files** for AI analysis → handle in memory via `file.buffer`, discard immediately after sending to Gemini. Never write to disk.
+- **PDF files** for AI analysis → handle in memory via `file.buffer`, discard immediately after sending to Azure AI. Never write to disk.
 - **ZIP export** → generate HTML/CSS/JS in memory, stream directly to HTTP response via `archiver`. Never write to disk.
 
 ### 3. Validation
@@ -98,10 +98,10 @@ Every controller, endpoint, and DTO must be fully decorated:
 - Endpoints that must be public (`POST /auth/register`, `POST /auth/login`) must be explicitly marked with the `@Public()` decorator from `common/decorators/public.decorator.ts`.
 - Opting out of auth must always be intentional and visible in code.
 
-### 6. Gemini Rate Limiting
-- Reject files exceeding 5MB with `400 Bad Request` before the buffer is passed to the Gemini SDK.
+### 6. AI Rate Limiting
+- Reject files exceeding 5MB with `400 Bad Request` before the buffer is passed to the OpenAI SDK.
 - Enforce a per-user minimum 30s cooldown between `/ai/analyze-cv` calls, using `ThrottlerGuard` or an in-memory timestamp map.
-- These checks must happen in this order: size check → cooldown check → Gemini call.
+- These checks must happen in this order: size check → cooldown check → Azure AI call.
 
 ---
 

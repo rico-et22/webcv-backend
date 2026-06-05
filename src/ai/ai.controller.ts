@@ -34,7 +34,7 @@ export class AiController {
   @UseInterceptors(FileInterceptor('file'))
   @ApiOperation({
     summary:
-      'Parse a PDF CV and return prefilled portfolio data using Gemini AI',
+      'Parse a PDF CV and return prefilled portfolio data using Azure AI',
   })
   @ApiConsumes('multipart/form-data')
   @ApiBody({

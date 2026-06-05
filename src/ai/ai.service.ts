@@ -7,10 +7,7 @@ import {
   ServiceUnavailableException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import {
-  GoogleGenerativeAI,
-  GoogleGenerativeAIFetchError,
-} from '@google/generative-ai';
+import { OpenAI } from 'openai';
 import { AnalyzeCvResponseDto } from './dto/analyze-cv-response.dto';
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
@@ -54,10 +51,20 @@ export class AiService {
       );
     }
 
-    // 4. Gemini API call
-    const apiKey = this.configService.getOrThrow<string>('GEMINI_API_KEY');
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: 'gemini-3.1-flash-lite' });
+    // 4. Azure OpenAI Responses API call
+    const apiKey = this.configService.getOrThrow<string>('AZURE_OPENAI_API_KEY');
+    const endpoint = this.configService.getOrThrow<string>('AZURE_OPENAI_ENDPOINT');
+    const apiVersion = this.configService.getOrThrow<string>('AZURE_OPENAI_API_VERSION');
+    const deployment = this.configService.getOrThrow<string>('AZURE_OPENAI_DEPLOYMENT');
+
+    const baseUrl = endpoint.replace(/\/+$/, '') + '/openai/v1';
+
+    const client = new OpenAI({
+      baseURL: baseUrl,
+      apiKey: apiKey,
+      defaultHeaders: { 'api-key': apiKey },
+      defaultQuery: { 'api-version': apiVersion },
+    });
 
     const base64Data = file.buffer.toString('base64');
 
@@ -69,7 +76,7 @@ Required JSON structure (all fields optional — include only what you can confi
   "fullName": "string",
   "jobTitle": "string",
   "location": "string (city, country)",
-  "bio": "string (professional summary, max 3 sentences)",
+  "bio": "string (professional summary, max 3 sentences. If not provided directly, improvise it. DO NOT DIRECTLY USE EXPERIENCE ITEM DESCRIPTIONS FOR THIS)",
   "contacts": {
     "email": "string",
     "phone": "string",
@@ -98,41 +105,46 @@ Required JSON structure (all fields optional — include only what you can confi
 }`;
 
     this.logger.log(
-      `Sending CV to Gemini for user ${userId} (${file.size} bytes)`,
+      `Sending CV to Azure AI for user ${userId} (${file.size} bytes)`,
     );
 
-    let result: Awaited<ReturnType<typeof model.generateContent>>;
+    let result;
     try {
-      result = await model.generateContent([
-        {
-          inlineData: {
-            mimeType: 'application/pdf',
-            data: base64Data,
+      result = await client.responses.create({
+        model: deployment,
+        input: [
+          {
+            role: 'user',
+            content: [
+              {
+                type: 'input_file',
+                filename: file.originalname || 'document.pdf',
+                file_data: `data:application/pdf;base64,${base64Data}`,
+              },
+              { type: 'input_text', text: prompt },
+            ],
           },
-        },
-        prompt,
-      ]);
-    } catch (err) {
-      if (err instanceof GoogleGenerativeAIFetchError) {
-        this.logger.error(
-          `Gemini API error for user ${userId}: [${err.status}] ${err.message}`,
+        ],
+      });
+    } catch (err: any) {
+      this.logger.error(
+        `Azure AI API error for user ${userId}: [${err.status}] ${err.message}`,
+      );
+      if (err.status === 429) {
+        throw new HttpException(
+          'Azure AI API quota exceeded. Please try again later.',
+          HttpStatus.TOO_MANY_REQUESTS,
         );
-        if (err.status === 429) {
-          throw new HttpException(
-            'Gemini API quota exceeded. Please try again later.',
-            HttpStatus.TOO_MANY_REQUESTS,
-          );
-        }
-        if (err.status !== undefined && err.status >= 500) {
-          throw new ServiceUnavailableException(
-            'AI service is temporarily unavailable. Please try again later.',
-          );
-        }
+      }
+      if (err.status !== undefined && err.status >= 500) {
+        throw new ServiceUnavailableException(
+          'AI service is temporarily unavailable. Please try again later.',
+        );
       }
       throw err;
     }
 
-    const text = result.response.text().trim();
+    const text = result.output?.[0]?.content?.[0]?.text?.trim() || '';
 
     // Strip markdown code fences if model wraps the JSON (e.g. ```json ... ```)
     const cleaned = text
@@ -140,13 +152,13 @@ Required JSON structure (all fields optional — include only what you can confi
       .replace(/\s*```$/, '')
       .trim();
 
-    // 5. Parse Gemini response
+    // 5. Parse AI response
     let parsed: AnalyzeCvResponseDto;
     try {
       parsed = JSON.parse(cleaned) as AnalyzeCvResponseDto;
     } catch {
       this.logger.error(
-        `Gemini returned non-JSON response for user ${userId}: ${cleaned.slice(0, 200)}`,
+        `Azure AI returned non-JSON response for user ${userId}: ${cleaned.slice(0, 200)}`,
       );
       throw new BadRequestException(
         'Failed to parse CV analysis result. Please try again.',

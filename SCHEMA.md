@@ -178,11 +178,11 @@ Bucket policies live in `supabase/migrations/storage_rls_policies.sql` — **mus
 ### Processing Order
 1. File size check → `400` if exceeded
 2. Per-user cooldown check (30s) → `429` if too soon
-3. Send buffer to Gemini API
+3. Send buffer to Azure AI (GPT-4.1-mini)
 4. Return structured JSON
 
 ### Output
-Returns a partial `CreateSiteDto` — only fields Gemini could extract from the CV:
+Returns a partial `CreateSiteDto` — only fields the AI model could extract from the CV:
 ```json
 {
   "data": {
