@@ -20,8 +20,11 @@ This application is built with a focus on strict typing, stateless file handling
 - **Validation:** `class-validator` + `class-transformer`
 - **File Export:** `archiver` (in-memory ZIP streaming)
 - **GitHub Export:** `octokit` (optional)
+- **Deployment**: Azure Container App (Docker) + GitHub Actions workflow
 
-## Supabase Setup
+## Setup & Installation
+
+### Supabase Setup
 
 To run this application properly, you must configure a Supabase project:
 
@@ -29,7 +32,7 @@ To run this application properly, you must configure a Supabase project:
 2. **Storage:** Create two public buckets named `avatars` and `screenshots`.
 3. **RLS Policies:** Apply the storage RLS policies located in `supabase/migrations/storage_rls_policies.sql` in the SQL Editor to ensure proper access control (enforcing user ownership of uploads).
 
-## SMTP Configuration (Resend)
+### SMTP Configuration (Resend)
 
 By default, Supabase's built-in email service is heavily rate-limited and shouldn't be used for production. You should configure a custom SMTP provider (e.g., Resend):
 
@@ -43,7 +46,7 @@ By default, Supabase's built-in email service is heavily rate-limited and should
    - **Password:** `<your-resend-api-key>`
    - **Sender email:** e.g., `noreply@yourdomain.com`
 
-## Docker Setup
+### Docker Installation (production mode only)
 
 This application is fully containerized using a multi-stage `Dockerfile`.
 To run the application via Docker:
@@ -55,7 +58,7 @@ To run the application via Docker:
    ```
    This will build the production image and spin up the stateless NestJS API on port `3000`.
 
-## Installation Instructions
+### Local / Dev Mode Installation
 
 1. **Clone the repository**
 
