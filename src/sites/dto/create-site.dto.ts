@@ -5,8 +5,6 @@ import {
   IsNotEmpty,
   IsOptional,
   IsString,
-  IsUrl,
-  ValidateIf,
   ValidateNested,
 } from 'class-validator';
 import { AchievementDto } from './achievement.dto';
@@ -37,11 +35,6 @@ export class CreateSiteDto {
   @IsOptional()
   @IsString()
   bio?: string;
-
-  @ApiPropertyOptional({ example: 'https://example.com/storage/avatar.png' })
-  @ValidateIf((_, value) => value !== undefined && value !== '')
-  @IsUrl()
-  avatarUrl?: string;
 
   @ApiPropertyOptional({ example: 'user-id/site-id/avatar.png' })
   @IsOptional()

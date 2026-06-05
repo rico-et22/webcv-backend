@@ -13,6 +13,7 @@ const ALLOWED_MIME_TYPES = [
   'image/gif',
 ];
 const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50 MB
+const SIGNED_URL_TTL = 3600; // 1 hour
 const VALID_BUCKETS = ['avatars', 'screenshots'] as const;
 
 export type StorageBucket = (typeof VALID_BUCKETS)[number];
@@ -49,11 +50,29 @@ export class StorageService {
     }
   }
 
-  private getPublicUrl(bucket: string, path: string): string {
-    const { data } = this.supabaseService.supabase.storage
+  /**
+   * Generate a short-lived signed URL for a private storage object.
+   * Uses supabaseAdmin (service role) — no user JWT required for signing.
+   * Access control is enforced at upload/delete time via the user-scoped client.
+   */
+  async getSignedUrl(
+    bucket: StorageBucket,
+    path: string,
+    expiresIn = SIGNED_URL_TTL,
+  ): Promise<string> {
+    const { data, error } = await this.supabaseService.supabaseAdmin.storage
       .from(bucket)
-      .getPublicUrl(path);
-    return data.publicUrl;
+      .createSignedUrl(path, expiresIn);
+
+    if (error || !data?.signedUrl) {
+      this.logger.error(
+        `Failed to sign URL (${bucket}/${path}): ${error?.message}`,
+      );
+      throw new BadRequestException(
+        `Could not generate signed URL: ${error?.message}`,
+      );
+    }
+    return data.signedUrl;
   }
 
   // ----------------------------------------------------------------- uploadFile
@@ -84,7 +103,7 @@ export class StorageService {
       throw new BadRequestException(`Upload failed: ${error.message}`);
     }
 
-    const url = this.getPublicUrl(bucket, storagePath);
+    const url = await this.getSignedUrl(bucket, storagePath);
     this.logger.log(
       `File uploaded by user ${userId}: ${bucket}/${storagePath}`,
     );

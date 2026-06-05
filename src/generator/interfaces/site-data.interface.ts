@@ -1,7 +1,9 @@
 import { CreateSiteDto } from '../../sites/dto/create-site.dto';
 
-export type SiteData = Omit<CreateSiteDto, 'avatarStoragePath'> & {
+export type SiteData = CreateSiteDto & {
   id: string;
+  /** Signed URL (1 hr TTL) — computed from avatarStoragePath at fetch time. */
+  avatarUrl?: string;
 };
 
 /** Generates `has${Capitalize<K>}: boolean` for every optional key K in T. */

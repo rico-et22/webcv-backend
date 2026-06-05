@@ -3,7 +3,8 @@ import { ApiProperty } from '@nestjs/swagger';
 export class UploadResponseDataDto {
   @ApiProperty({
     example:
-      'https://xyz.supabase.co/storage/v1/object/public/avatars/user-id/avatar.png',
+      'https://xyz.supabase.co/storage/v1/object/sign/avatars/user-id/ts.jpg?token=…',
+    description: 'Signed URL (1 hr TTL). Use immediately for preview; do not persist.',
   })
   url: string;
 

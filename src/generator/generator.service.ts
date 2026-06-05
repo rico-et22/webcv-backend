@@ -18,6 +18,7 @@ import { EducationDto } from '../sites/dto/education.dto';
 import { ExperienceDto } from '../sites/dto/experience.dto';
 import { ProjectDto } from '../sites/dto/project.dto';
 import { SupabaseService } from '../supabase/supabase.service';
+import { StorageService } from '../storage/storage.service';
 import { registerHelpers } from './helpers/handlebars-helpers';
 import { SiteData, TemplateContext } from './interfaces/site-data.interface';
 
@@ -34,6 +35,7 @@ export class GeneratorService {
 
   constructor(
     private readonly supabaseService: SupabaseService,
+    private readonly storageService: StorageService,
     private readonly configService: ConfigService,
   ) {
     registerHelpers();
@@ -42,12 +44,6 @@ export class GeneratorService {
     this.styleTpl = this.compileTemplate('style.hbs');
     this.scriptTpl = this.compileTemplate('script.hbs');
     this.fontDataUri = this.loadFontAsDataUri();
-  }
-
-  /** Builds the public URL for a file in the screenshots Supabase Storage bucket. */
-  private storagePublicUrl(storagePath: string): string {
-    const base = this.configService.get<string>('SUPABASE_URL');
-    return `${base}/storage/v1/object/public/screenshots/${storagePath}`;
   }
 
   private loadFontAsDataUri(): string {
@@ -110,7 +106,8 @@ export class GeneratorService {
       throw new ForbiddenException('You do not have access to this portfolio');
     }
 
-    return this.mapRowToSiteData(data as Record<string, unknown>);
+    const site = this.mapRowToSiteData(data as Record<string, unknown>);
+    return this.resolveSignedUrls(site);
   }
 
   private mapRowToSiteData(row: Record<string, unknown>): SiteData {
@@ -120,7 +117,7 @@ export class GeneratorService {
       jobTitle: row.job_title as string | undefined,
       location: row.location as string | undefined,
       bio: row.bio as string | undefined,
-      avatarUrl: row.avatar_url as string | undefined,
+      avatarStoragePath: row.avatar_storage_path as string | undefined,
       contacts: row.contacts as ContactDto | undefined,
       skills: row.skills as string[] | undefined,
       experience: row.experience as ExperienceDto[] | undefined,
@@ -128,6 +125,49 @@ export class GeneratorService {
       projects: row.projects as ProjectDto[] | undefined,
       achievements: row.achievements as AchievementDto[] | undefined,
     };
+  }
+
+  /**
+   * Signs avatar and project image URLs after DB fetch.
+   * Buckets are private — signed URLs are required for any image access.
+   */
+  private async resolveSignedUrls(site: SiteData): Promise<SiteData> {
+    const clone = { ...site };
+
+    if (clone.avatarStoragePath) {
+      try {
+        clone.avatarUrl = await this.storageService.getSignedUrl(
+          'avatars',
+          clone.avatarStoragePath,
+        );
+      } catch (err: unknown) {
+        this.logger.warn(
+          `Generator: could not sign avatar URL: ${String(err)}`,
+        );
+      }
+    }
+
+    if (clone.projects?.length) {
+      clone.projects = await Promise.all(
+        clone.projects.map(async (p) => {
+          if (!p.imageStoragePath) return p;
+          try {
+            const imageUrl = await this.storageService.getSignedUrl(
+              'screenshots',
+              p.imageStoragePath,
+            );
+            return { ...p, imageUrl };
+          } catch (err: unknown) {
+            this.logger.warn(
+              `Generator: could not sign project image URL: ${String(err)}`,
+            );
+            return p;
+          }
+        }),
+      );
+    }
+
+    return clone;
   }
 
   // ------------------------------------------------------------------ context
@@ -215,14 +255,15 @@ export class GeneratorService {
       return `data:${result.contentType};base64,${result.buffer.toString('base64')}`;
     };
 
+    // avatarUrl is already a signed URL from resolveSignedUrls()
     if (clone.avatarUrl) clone.avatarUrl = await toDataUri(clone.avatarUrl);
 
     if (clone.projects?.length) {
       clone.projects = await Promise.all(
         clone.projects.map(async (p) => {
-          if (!p.imageStoragePath) return p;
-          const publicUrl = this.storagePublicUrl(p.imageStoragePath);
-          return { ...p, imageUrl: await toDataUri(publicUrl) };
+          // imageUrl is already a signed URL from resolveSignedUrls()
+          if (!p.imageUrl) return p;
+          return { ...p, imageUrl: await toDataUri(p.imageUrl) };
         }),
       );
     }
@@ -240,6 +281,7 @@ export class GeneratorService {
   ): Promise<SiteData> {
     const clone = { ...site };
 
+    // avatarUrl is already a signed URL from resolveSignedUrls()
     if (clone.avatarUrl) {
       const result = await this.fetchImage(clone.avatarUrl);
       if (result) {
@@ -253,9 +295,9 @@ export class GeneratorService {
     if (clone.projects?.length) {
       clone.projects = await Promise.all(
         clone.projects.map(async (p, i) => {
-          if (!p.imageStoragePath) return p;
-          const publicUrl = this.storagePublicUrl(p.imageStoragePath);
-          const result = await this.fetchImage(publicUrl);
+          // imageUrl is already a signed URL from resolveSignedUrls()
+          if (!p.imageUrl) return p;
+          const result = await this.fetchImage(p.imageUrl);
           if (!result) return p;
           const ext = this.imgExtMap[result.contentType] ?? 'jpg';
           const localPath = `assets/img/project-${i}.${ext}`;

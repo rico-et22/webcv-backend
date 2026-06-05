@@ -91,8 +91,8 @@ fullName: string
 jobTitle: string
 location: string
 bio: string
-avatarUrl: string            // Supabase Storage public URL
-avatarStoragePath: string    // Supabase Storage path, used for deletion
+// avatarUrl column has been dropped — URL is derived at read time from avatarStoragePath
+avatarStoragePath: string    // Supabase Storage path, used for deletion + signed URL generation
 contacts: json       // { email?, phone?, linkedin?, github?, website? }
 skills: string[]
 experience: json[]   // [{ company, role, startDate, endDate, description }]
@@ -110,7 +110,7 @@ updatedAt: timestamp
 id: string
 fullName: string
 jobTitle?: string
-avatarUrl?: string
+avatarUrl?: string   // signed URL (1 hr TTL), computed from avatarStoragePath at read time
 createdAt: string
 updatedAt: string
 ```
@@ -121,15 +121,17 @@ fullName: string          // required
 jobTitle?: string
 location?: string
 bio?: string
-avatarUrl?: string            // @IsUrl
+// avatarUrl is NOT an input field — it is computed at read time from avatarStoragePath
 avatarStoragePath?: string    // returned by POST /storage/upload
 contacts?: ContactDto     // { email?, phone?, linkedin?, github?, website? }
 skills?: string[]
 experience?: ExperienceDto[]  // { company, role, startDate, endDate?, description? }
 education?: EducationDto[]    // { institution, degree, startDate, endDate? }
-projects?: ProjectDto[]       // { name, description?, url?, imageUrl?, imageStoragePath? }
+projects?: ProjectDto[]       // { name, description?, url?, imageStoragePath? }
 achievements?: AchievementDto[] // { title, description? }
 ```
+
+**Response**: all read endpoints (`GET /sites`, `GET /sites/:id`, `POST /sites`, `PUT /sites/:id`) return `avatarUrl` (signed, 1 hr TTL) computed from `avatarStoragePath`, and `projects[].imageUrl` (signed) computed from `projects[].imageStoragePath`.
 
 ---
 
@@ -149,16 +151,22 @@ achievements?: AchievementDto[] // { title, description? }
 ### Notes
 - Accepted MIME types: `image/jpeg`, `image/png`, `image/webp`, `image/gif`
 - Max file size: **50 MB** (enforced in code)
-- Buckets: `avatars` (avatar images), `screenshots` (project screenshots)
-- Upload response returns `{ url, storagePath }` — pass both into `POST /sites` or `PUT /sites/:id` to attach the image to a site
+- Buckets: `avatars` (avatar images), `screenshots` (project screenshots) — both **private** (no public CDN access)
+- Upload response returns `{ url, storagePath }` — `url` is a **signed URL (1 hr TTL)** for immediate preview; `storagePath` is permanent. Pass `storagePath` into `POST /sites` or `PUT /sites/:id`
+- **Do not persist the `url` from the upload response** — it expires after 1 hour. Always rely on `GET /sites/:id` for display, which re-signs on every read
 - Storage path format: `{userId}/{timestamp}.{ext}` — scoped to the authenticated user, no siteId dependency
 - This enables the **upload-first flow**: upload images → receive paths → create site in a single `POST /sites` call
 
 ### Supabase Client Usage
-Storage calls use a **per-request client** scoped to the user's JWT (`clientForUser(jwt)`) so that Supabase Storage RLS bucket policies are enforced natively. There are no DB queries in `StorageService` — ownership is enforced solely via the `userId/` path prefix checked both in application code (`deleteFile`) and in bucket RLS policies.
+Storage calls use a **per-request client** scoped to the user's JWT (`clientForUser(jwt)`) so that Supabase Storage RLS bucket policies are enforced natively. Signed URL generation uses `supabaseAdmin.storage.createSignedUrl()` (service role, no user JWT needed for signing). There are no DB queries in `StorageService`.
 
 ### RLS Setup
 Bucket policies live in `supabase/migrations/storage_rls_policies.sql` — **must be applied manually in the Supabase SQL Editor** when setting up a new environment. Without them, storage bucket access is unrestricted.
+
+Both buckets are **private** (`public = false`). The RLS SELECT policy restricts **direct authenticated reads** (e.g., `clientForUser(jwt).storage.download()`) to the owning user only.
+
+> [!IMPORTANT]
+> `supabaseAdmin.storage.createSignedUrl()` uses the service role key and **bypasses RLS**. The SELECT policy does **not** protect signed URL generation. The protection here is entirely application-level: `getSignedUrl()` is never exposed directly to user input — all paths reaching it come from either (a) a DB row already verified by an ownership check, or (b) a path computed server-side as `${userId}/...`. If that application-level guard were ever bypassed, the RLS policy would not save you.
 
 ---
 

@@ -1,11 +1,12 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { SupabaseModule } from '../supabase/supabase.module';
+import { StorageModule } from '../storage/storage.module';
 import { GeneratorController } from './generator.controller';
 import { GeneratorService } from './generator.service';
 
 @Module({
-  imports: [SupabaseModule, ConfigModule],
+  imports: [SupabaseModule, ConfigModule, StorageModule],
   controllers: [GeneratorController],
   providers: [GeneratorService],
 })

@@ -5,14 +5,22 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { SupabaseService } from '../supabase/supabase.service';
+import { StorageService } from '../storage/storage.service';
 import { CreateSiteDto } from './dto/create-site.dto';
 import { UpdateSiteDto } from './dto/update-site.dto';
+import {
+  SiteResponseDto,
+  SiteSummaryResponseDto,
+} from './dto/site-responses.dto';
 
 @Injectable()
 export class SitesService {
   private readonly logger = new Logger(SitesService.name);
 
-  constructor(private readonly supabaseService: SupabaseService) {}
+  constructor(
+    private readonly supabaseService: SupabaseService,
+    private readonly storageService: StorageService,
+  ) {}
 
   // ------------------------------------------------------------------ helpers
 
@@ -23,21 +31,21 @@ export class SitesService {
     if (dto.jobTitle !== undefined) row.job_title = dto.jobTitle;
     if (dto.location !== undefined) row.location = dto.location;
     if (dto.bio !== undefined) row.bio = dto.bio;
-    if (dto.avatarUrl !== undefined) row.avatar_url = dto.avatarUrl;
     if (dto.avatarStoragePath !== undefined)
       row.avatar_storage_path = dto.avatarStoragePath;
     if (dto.contacts !== undefined) row.contacts = dto.contacts;
     if (dto.skills !== undefined) row.skills = dto.skills;
     if (dto.experience !== undefined) row.experience = dto.experience;
     if (dto.education !== undefined) row.education = dto.education;
-    if (dto.projects !== undefined) row.projects = dto.projects;
+    if (dto.projects !== undefined)
+      row.projects = dto.projects.map(({ imageUrl: _, ...p }) => p);
     if (dto.achievements !== undefined) row.achievements = dto.achievements;
     return row;
   }
 
-  /** Map snake_case DB columns to camelCase DTO fields for full site response */
+  /** Map snake_case DB columns to camelCase for full site response */
   /* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access */
-  private fromDbRow(row: any) {
+  private fromDbRow(row: any): SiteResponseDto {
     return {
       id: row.id,
       userId: row.user_id,
@@ -45,7 +53,6 @@ export class SitesService {
       jobTitle: row.job_title,
       location: row.location,
       bio: row.bio,
-      avatarUrl: row.avatar_url,
       avatarStoragePath: row.avatar_storage_path,
       contacts: row.contacts,
       skills: row.skills,
@@ -58,18 +65,71 @@ export class SitesService {
     };
   }
 
-  /** Map snake_case DB columns to camelCase DTO fields for site summary response */
-  private fromDbSummaryRow(row: any) {
+  /** Map snake_case DB columns to camelCase for site summary response */
+  private fromDbSummaryRow(row: any): SiteSummaryResponseDto {
     return {
       id: row.id,
       fullName: row.full_name,
       jobTitle: row.job_title,
-      avatarUrl: row.avatar_url,
+      avatarStoragePath: row.avatar_storage_path,
       createdAt: row.created_at,
       updatedAt: row.updated_at,
     };
   }
   /* eslint-enable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access */
+
+  /**
+   * Attach signed URLs to a site or summary response.
+   * avatarStoragePath → avatarUrl and per-project imageStoragePath → imageUrl.
+   * Runs concurrently via Promise.all.
+   */
+  private async resolveSignedUrls(
+    site: SiteResponseDto | SiteSummaryResponseDto,
+  ): Promise<SiteResponseDto | SiteSummaryResponseDto> {
+    const result = { ...site };
+
+    const tasks: Promise<void>[] = [];
+
+    if (site.avatarStoragePath) {
+      tasks.push(
+        this.storageService
+          .getSignedUrl('avatars', site.avatarStoragePath)
+          .then((url) => {
+            result.avatarUrl = url;
+          })
+          .catch((err: unknown) => {
+            this.logger.warn(
+              `Could not sign avatar URL for ${site.avatarStoragePath}: ${String(err)}`,
+            );
+          }),
+      );
+    }
+
+    // Only SiteResponseDto has projects
+    if ('projects' in site && Array.isArray(site.projects)) {
+      const signedProjects = await Promise.all(
+        (site as SiteResponseDto).projects!.map(async (project) => {
+          if (!project.imageStoragePath) return project;
+          try {
+            const imageUrl = await this.storageService.getSignedUrl(
+              'screenshots',
+              project.imageStoragePath,
+            );
+            return { ...project, imageUrl };
+          } catch (err: unknown) {
+            this.logger.warn(
+              `Could not sign project image URL for ${project.imageStoragePath}: ${String(err)}`,
+            );
+            return project;
+          }
+        }),
+      );
+      (result as SiteResponseDto).projects = signedProjects;
+    }
+
+    await Promise.all(tasks);
+    return result;
+  }
 
   // ------------------------------------------------------------------ create
 
@@ -87,10 +147,8 @@ export class SitesService {
       throw new Error(error.message);
     }
 
-    return {
-      data: this.fromDbRow(data),
-      message: 'Portfolio created successfully',
-    };
+    const site = await this.resolveSignedUrls(this.fromDbRow(data));
+    return { data: site, message: 'Portfolio created successfully' };
   }
 
   // ------------------------------------------------------------------ findAll
@@ -98,7 +156,9 @@ export class SitesService {
   async findAll(userId: string) {
     const { data, error } = await this.supabaseService.supabaseAdmin
       .from('sites')
-      .select('id, full_name, job_title, avatar_url, created_at, updated_at')
+      .select(
+        'id, full_name, job_title, avatar_storage_path, created_at, updated_at',
+      )
       .eq('user_id', userId)
       .order('created_at', { ascending: false });
 
@@ -109,10 +169,11 @@ export class SitesService {
       throw new Error(error.message);
     }
 
-    return {
-      data: data.map((row) => this.fromDbSummaryRow(row)),
-      message: 'Portfolios retrieved successfully',
-    };
+    const signed = await Promise.all(
+      data.map((row) => this.resolveSignedUrls(this.fromDbSummaryRow(row))),
+    );
+
+    return { data: signed, message: 'Portfolios retrieved successfully' };
   }
 
   // ------------------------------------------------------------------ findOne
@@ -132,10 +193,8 @@ export class SitesService {
       throw new ForbiddenException('You do not have access to this portfolio');
     }
 
-    return {
-      data: this.fromDbRow(data),
-      message: 'Portfolio retrieved successfully',
-    };
+    const site = await this.resolveSignedUrls(this.fromDbRow(data));
+    return { data: site, message: 'Portfolio retrieved successfully' };
   }
 
   // ------------------------------------------------------------------ update
@@ -157,10 +216,8 @@ export class SitesService {
       throw new Error(error.message);
     }
 
-    return {
-      data: this.fromDbRow(data),
-      message: 'Portfolio updated successfully',
-    };
+    const site = await this.resolveSignedUrls(this.fromDbRow(data));
+    return { data: site, message: 'Portfolio updated successfully' };
   }
 
   // ------------------------------------------------------------------ remove

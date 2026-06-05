@@ -144,11 +144,15 @@ Use a global `HttpExceptionFilter` to ensure all errors follow this shape.
 - Storage controllers must extract the JWT from `Authorization` header and pass it to the service for `clientForUser(jwt)`
 
 ### Storage RLS Policies
-Bucket-level RLS policies are defined in `supabase/migrations/storage_rls_policies.sql` and must be applied manually in the Supabase SQL Editor when setting up a new environment. They enforce:
-- `avatars` bucket — authenticated users can upload/update/delete only under their own `userId/` folder; public read
-- `screenshots` bucket — authenticated users can upload/delete only under their own `userId/` folder; public read
+Bucket policies live in `supabase/migrations/storage_rls_policies.sql` and must be applied manually in the Supabase SQL Editor when setting up a new environment. They enforce:
+- `avatars` bucket — authenticated users can upload/update/delete only under their own `userId/` folder; **owner-only read** (no public access)
+- `screenshots` bucket — authenticated users can upload/delete only under their own `userId/` folder; **owner-only read** (no public access)
+
+Both buckets are **private** (`public = false` at the bucket level — required for RLS SELECT policies to take effect).
 
 These policies are the **second layer** of ownership enforcement for storage. The first layer is application-level code in `StorageService`. Both layers must remain in sync.
+
+**Signed URLs:** since buckets are private, the application uses `supabaseAdmin.storage.createSignedUrl()` (TTL: 3600 s) to generate short-lived URLs. `StorageService.getSignedUrl()` is a public method so `SitesService` can call it at read time. The `avatar_url` DB column has been dropped — `avatarUrl` in responses is always computed, never stored.
 
 ---
 
