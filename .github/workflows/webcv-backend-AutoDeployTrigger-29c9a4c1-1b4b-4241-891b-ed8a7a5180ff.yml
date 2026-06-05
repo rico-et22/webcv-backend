@@ -43,7 +43,7 @@ jobs:
           registryPassword: ${{ secrets.WEBCVBACKEND_REGISTRY_PASSWORD }}
           containerAppName: webcv-backend
           resourceGroup: webcv-ai
-          imageToBuild: ghcr.io/webcv-backend:${{ github.sha }}
+          imageToBuild: ghcr.io/${{ github.repository }}:${{ github.sha }}
           _buildArgumentsKey_: |
             _buildArgumentsValues_
 
