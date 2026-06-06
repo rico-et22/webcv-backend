@@ -52,10 +52,18 @@ export class AiService {
     }
 
     // 4. Azure OpenAI Responses API call
-    const apiKey = this.configService.getOrThrow<string>('AZURE_OPENAI_API_KEY');
-    const endpoint = this.configService.getOrThrow<string>('AZURE_OPENAI_ENDPOINT');
-    const apiVersion = this.configService.getOrThrow<string>('AZURE_OPENAI_API_VERSION');
-    const deployment = this.configService.getOrThrow<string>('AZURE_OPENAI_DEPLOYMENT');
+    const apiKey = this.configService.getOrThrow<string>(
+      'AZURE_OPENAI_API_KEY',
+    );
+    const endpoint = this.configService.getOrThrow<string>(
+      'AZURE_OPENAI_ENDPOINT',
+    );
+    const apiVersion = this.configService.getOrThrow<string>(
+      'AZURE_OPENAI_API_VERSION',
+    );
+    const deployment = this.configService.getOrThrow<string>(
+      'AZURE_OPENAI_DEPLOYMENT',
+    );
 
     const baseUrl = endpoint.replace(/\/+$/, '') + '/openai/v1';
 
@@ -70,6 +78,7 @@ export class AiService {
 
     const prompt = `You are a CV parser. Analyze the provided PDF CV and extract the following information into a strict JSON object.
 Return ONLY valid JSON, no markdown, no explanation, no code fences.
+Return data language should be the same as the uploaded CV.
 
 Required JSON structure (all fields optional — include only what you can confidently extract):
 {
