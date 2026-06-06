@@ -279,18 +279,65 @@ Content-Type: text/html; charset=utf-8
 
 ---
 
-## Module 6 Extension — GitHub Integration (Optional)
+---
 
-> Extends the Generator module. Requires `octokit` dependency. Not part of the core Generator implementation.
+## Module 7 — GitHub Integration (Optional)
 
-### Endpoint
+> Dedicated `github/` module. Requires `octokit` dependency and `GITHUB_CLIENT_ID` / `GITHUB_CLIENT_SECRET` env vars. All endpoints return `501 Not Implemented` if env vars are absent.
+
+### Endpoints
 | Method | Path | Auth | Description |
 |---|---|---|---|
-| POST | `/generator/github/:siteId` | 🔒 JWT | Push generated static site to GitHub Pages |
+| POST | `/github/exchange` | 🔒 JWT | Exchange GitHub OAuth code for access token |
+| POST | `/github/deploy/:siteId` | 🔒 JWT | Push generated site to GitHub Pages |
 
-### Notes
-- Input body: `{ repoName, githubToken }`
-  - `repoName`: just the repo name (e.g. `my-portfolio`), not `username/repo`
-  - `githubToken`: used in-request only, **never stored or logged**
-- Uses `octokit` to push generated files to a GitHub repo
-- Enables GitHub Pages hosting
+### `POST /github/exchange`
+- **Input body:** `{ code: string }` — OAuth authorization code from GitHub redirect
+- **Flow:** `POST github.com/login/oauth/access_token` → returns `access_token` → fetch `/user` for username
+- **Response:**
+  ```json
+  {
+    "data": {
+      "githubToken": "gho_xxxxxxxxxxxxxxxxxxxx",
+      "githubUsername": "kamilpawlak"
+    },
+    "message": "GitHub account connected successfully"
+  }
+  ```
+- **Token handling:** returned to frontend only, **never stored or logged server-side**
+- **Errors:** `400` — invalid/expired code; `501` — GitHub not configured
+
+### `POST /github/deploy/:siteId`
+- **Input body:** `{ githubToken: string }` — token from `/github/exchange`
+- **Repo name:** auto-computed as `<username>.github.io` — not configurable
+- **Flow:**
+  1. Authenticate with token → fetch GitHub username
+  2. Create public repo `<username>.github.io` (or use existing)
+  3. Generate all site files in memory via `GeneratorService.generateFiles()`
+  4. Push all files via Git Data API (createBlob → createTree → createCommit → updateRef, force)
+  5. Enable GitHub Pages (`source: main, path: /`) — skip if already active
+- **Response:**
+  ```json
+  {
+    "data": {
+      "repoUrl": "https://github.com/kamilpawlak/kamilpawlak.github.io",
+      "pagesUrl": "https://kamilpawlak.github.io"
+    },
+    "message": "Portfolio deployed to GitHub Pages successfully"
+  }
+  ```
+- **Errors:** `401` — invalid token; `403` — wrong owner or missing repo scope; `404` — portfolio not found; `501` — GitHub not configured
+
+### OAuth App Setup
+1. Go to [github.com/settings/developers](https://github.com/settings/developers) → **New OAuth App**
+2. Set **Authorization callback URL** to `{FRONTEND_URL}/github/callback`
+3. Add to `.env`: `GITHUB_CLIENT_ID=...` and `GITHUB_CLIENT_SECRET=...`
+
+### Frontend OAuth Flow
+```
+1. Redirect user to: https://github.com/login/oauth/authorize?client_id=X&scope=repo&state=<encoded-context>
+2. GitHub redirects to: {FRONTEND_URL}/github/callback?code=ABC&state=<encoded-context>
+3. Frontend calls POST /github/exchange { code: "ABC" }
+4. Frontend stores { githubToken, githubUsername } in memory / sessionStorage
+5. On deploy: POST /github/deploy/:siteId { githubToken }
+```

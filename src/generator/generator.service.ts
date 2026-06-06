@@ -2,7 +2,6 @@ import * as fs from 'fs';
 import * as path from 'path';
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const archiver = require('archiver') as typeof import('archiver');
-import type { Archiver } from 'archiver';
 import * as Handlebars from 'handlebars';
 import { ConfigService } from '@nestjs/config';
 import {
@@ -21,6 +20,16 @@ import { SupabaseService } from '../supabase/supabase.service';
 import { StorageService } from '../storage/storage.service';
 import { registerHelpers } from './helpers/handlebars-helpers';
 import { SiteData, TemplateContext } from './interfaces/site-data.interface';
+
+/** A single file in the generated static site, ready for ZIP or GitHub push. */
+export interface GeneratedFile {
+  /** Relative path within the site, e.g. `index.html`, `assets/img/avatar.jpg` */
+  path: string;
+  /** Text content — set for HTML/CSS/JS files. */
+  text: string | null;
+  /** Binary content — set for images and fonts. */
+  buffer: Buffer | null;
+}
 
 @Injectable()
 export class GeneratorService {
@@ -272,14 +281,14 @@ export class GeneratorService {
   }
 
   /**
-   * Fetches remote images, appends them to the archive as local files,
-   * and returns a site data clone with updated local paths (ZIP mode).
+   * Fetches remote images, collects them as GeneratedFile entries with local paths,
+   * and returns a site data clone with updated local image references.
    */
-  private async bundleImages(
+  private async collectImageFiles(
     site: SiteData,
-    archive: Archiver,
-  ): Promise<SiteData> {
+  ): Promise<{ imageFiles: GeneratedFile[]; bundledSite: SiteData }> {
     const clone = { ...site };
+    const imageFiles: GeneratedFile[] = [];
 
     // avatarUrl is already a signed URL from resolveSignedUrls()
     if (clone.avatarUrl) {
@@ -287,7 +296,7 @@ export class GeneratorService {
       if (result) {
         const ext = this.imgExtMap[result.contentType] ?? 'jpg';
         const localPath = `assets/img/avatar.${ext}`;
-        archive.append(result.buffer, { name: localPath });
+        imageFiles.push({ path: localPath, text: null, buffer: result.buffer });
         clone.avatarUrl = localPath;
       }
     }
@@ -301,13 +310,17 @@ export class GeneratorService {
           if (!result) return p;
           const ext = this.imgExtMap[result.contentType] ?? 'jpg';
           const localPath = `assets/img/project-${i}.${ext}`;
-          archive.append(result.buffer, { name: localPath });
+          imageFiles.push({
+            path: localPath,
+            text: null,
+            buffer: result.buffer,
+          });
           return { ...p, imageUrl: localPath };
         }),
       );
     }
 
-    return clone;
+    return { imageFiles, bundledSite: clone };
   }
 
   // ------------------------------------------------------------------ public API
@@ -321,12 +334,45 @@ export class GeneratorService {
     return this.indexTpl(context);
   }
 
+  /**
+   * Generates all static site files in memory — HTML, CSS, JS, font, and images.
+   * Used by both generateZip() and GithubService.deploy().
+   */
+  async generateFiles(
+    userId: string,
+    siteId: string,
+  ): Promise<GeneratedFile[]> {
+    const site = await this.fetchSite(userId, siteId);
+    const { imageFiles, bundledSite } = await this.collectImageFiles(site);
+
+    const css = this.styleTpl({ fontSrc: this.fontRelativePath });
+    const js = this.scriptTpl({});
+    const context = this.prepareSiteContext(bundledSite, false);
+    const html = this.indexTpl(context);
+
+    const fontBuffer = fs.readFileSync(
+      path.join(__dirname, 'fonts', 'inter-latin-wght-normal.woff2'),
+    );
+
+    return [
+      { path: 'index.html', text: html, buffer: null },
+      { path: 'style.css', text: css, buffer: null },
+      { path: 'script.js', text: js, buffer: null },
+      {
+        path: 'assets/fonts/inter-latin-wght-normal.woff2',
+        text: null,
+        buffer: fontBuffer,
+      },
+      ...imageFiles,
+    ];
+  }
+
   async generateZip(
     userId: string,
     siteId: string,
     res: express.Response,
   ): Promise<void> {
-    const site = await this.fetchSite(userId, siteId);
+    const files = await this.generateFiles(userId, siteId);
 
     res.setHeader('Content-Type', 'application/zip');
     res.setHeader(
@@ -340,27 +386,13 @@ export class GeneratorService {
     });
     archive.pipe(res);
 
-    // Fetch images and bundle them as local files; updates src paths in the clone.
-    const bundledSite = await this.bundleImages(site, archive);
-
-    const css = this.styleTpl({ fontSrc: this.fontRelativePath });
-    const js = this.scriptTpl({});
-    const context = this.prepareSiteContext(bundledSite, false);
-    const html = this.indexTpl(context);
-
-    const fontPath = path.join(
-      __dirname,
-      'fonts',
-      'inter-latin-wght-normal.woff2',
-    );
-    const fontBuffer = fs.readFileSync(fontPath);
-
-    archive.append(html, { name: 'index.html' });
-    archive.append(css, { name: 'style.css' });
-    archive.append(js, { name: 'script.js' });
-    archive.append(fontBuffer, {
-      name: 'assets/fonts/inter-latin-wght-normal.woff2',
-    });
+    for (const file of files) {
+      if (file.buffer !== null) {
+        archive.append(file.buffer, { name: file.path });
+      } else if (file.text !== null) {
+        archive.append(file.text, { name: file.path });
+      }
+    }
 
     await archive.finalize();
   }

@@ -46,6 +46,29 @@ By default, Supabase's built-in email service is heavily rate-limited and should
    - **Password:** `<your-resend-api-key>`
    - **Sender email:** e.g., `noreply@yourdomain.com`
 
+### GitHub OAuth Setup (optional)
+
+Enables the **"Deploy to GitHub Pages"** feature. Without these vars the app starts normally — the `/github/*` endpoints return `501 Not Implemented`.
+
+1. Go to [github.com/settings/developers](https://github.com/settings/developers) → **New OAuth App**.
+2. Fill in:
+   - **Application name:** `webCV` (or any name)
+   - **Homepage URL:** your frontend URL (e.g. `http://localhost:5173`)
+   - **Authorization callback URL:** `{FRONTEND_URL}/github/callback`
+3. After registering, copy the **Client ID** and generate a **Client Secret**.
+4. Add to `.env`:
+   ```env
+   GITHUB_CLIENT_ID=your_client_id
+   GITHUB_CLIENT_SECRET=your_client_secret
+   ```
+
+The frontend OAuth flow works as follows:
+1. Redirect the user to `https://github.com/login/oauth/authorize?client_id=X&scope=repo&state=<context>`
+2. GitHub redirects back to `/github/callback?code=ABC&state=<context>`
+3. Frontend calls `POST /github/exchange { code }` → receives `{ githubToken, githubUsername }`
+4. Token is kept in memory/sessionStorage — never stored server-side
+5. On deploy: `POST /github/deploy/:siteId { githubToken }` → portfolio pushed to `<username>.github.io`
+
 ### Docker Installation (production mode only)
 
 This application is fully containerized using a multi-stage `Dockerfile`.
@@ -85,6 +108,7 @@ To run the application via Docker:
    - `AZURE_OPENAI_API_KEY`, `AZURE_OPENAI_ENDPOINT`, `AZURE_OPENAI_API_VERSION`, `AZURE_OPENAI_DEPLOYMENT`
    - `JWT_SECRET` (from Supabase dashboard)
    - `PORT` (defaults to 3000)
+   - `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET` *(optional — see GitHub OAuth Setup below)*
 
 4. **Run the application**
 

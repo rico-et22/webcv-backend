@@ -9,6 +9,7 @@ import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { SupabaseModule } from './supabase/supabase.module';
 import { AiModule } from './ai/ai.module';
 import { GeneratorModule } from './generator/generator.module';
+import { GithubModule } from './github/github.module';
 import { SitesModule } from './sites/sites.module';
 import { StorageModule } from './storage/storage.module';
 import { UsersModule } from './users/users.module';
@@ -26,6 +27,7 @@ import { UsersModule } from './users/users.module';
     StorageModule,
     AiModule,
     GeneratorModule,
+    GithubModule,
   ],
   controllers: [AppController],
   providers: [

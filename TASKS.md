@@ -36,7 +36,8 @@
 - [x] Review checkpoint
 
 ## Module 6 Extension — GitHub Integration (Optional)
-- [~] `POST /generator/github/:siteId` — push generated site to GitHub Pages via `octokit` (Postponed for later)
+- [x] `POST /github/exchange` — exchange GitHub OAuth code for access token (`GithubModule`)
+- [x] `POST /github/deploy/:siteId` — push generated site to GitHub Pages via `octokit` (`GithubModule`)
 
 ## Finalization
 - [x] Dockerization (`Dockerfile` + `docker-compose.yml`)

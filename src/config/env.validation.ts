@@ -9,6 +9,8 @@ export const envSchema = z.object({
   AZURE_OPENAI_API_VERSION: z.string().min(1),
   AZURE_OPENAI_DEPLOYMENT: z.string().min(1),
   JWT_SECRET: z.string().min(1),
+  GITHUB_CLIENT_ID: z.string().min(1).optional(),
+  GITHUB_CLIENT_SECRET: z.string().min(1).optional(),
   PORT: z.coerce.number().default(3000),
   NODE_ENV: z
     .enum(['development', 'production', 'test'])

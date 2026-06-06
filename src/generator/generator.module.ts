@@ -9,5 +9,6 @@ import { GeneratorService } from './generator.service';
   imports: [SupabaseModule, ConfigModule, StorageModule],
   controllers: [GeneratorController],
   providers: [GeneratorService],
+  exports: [GeneratorService],
 })
 export class GeneratorModule {}
