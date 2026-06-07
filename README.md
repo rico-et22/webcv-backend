@@ -134,6 +134,14 @@ To run the application via Docker:
 5. **Access API Documentation**
    Once the application is running, the Swagger API documentation will be available (typically at `/api` or `/swagger`, depending on your bootstrap configuration).
 
+## Testing
+
+The generator module is covered with unit tests (Jest). To run them, type:
+
+```bash
+pnpm test
+```
+
 ## Acknowledgments & Licensing
 
 This project is licensed under the MIT License.
