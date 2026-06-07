@@ -1,10 +1,12 @@
 # webCV Backend
 
-## Purpose
+## About
 
-webCV is a REST API backend for a portfolio website generator designed for IT professionals. It is being built as a university "Data Management" course deliverable and to be reused in the future as the backend for an engineering thesis.
+webCV is a REST API backend for a portfolio website generator designed for IT professionals. It is being built as a university bachelor thesis deliverable and to be reused in the future as the backend for an engineering thesis.
 
 The core philosophy behind webCV is **user independence** — there is no vendor lock-in, meaning users fully own and control their generated static sites.
+
+Additionally, webCV has an AI CV analyzer built-in, enabling rapid portfolio website creation without having to fill all the fields manually.
 
 ## Tech Stack
 
@@ -63,6 +65,7 @@ Enables the **"Deploy to GitHub Pages"** feature. Without these vars the app sta
    ```
 
 The frontend OAuth flow works as follows:
+
 1. Redirect the user to `https://github.com/login/oauth/authorize?client_id=X&scope=repo&state=<context>`
 2. GitHub redirects back to `/github/callback?code=ABC&state=<context>`
 3. Frontend calls `POST /github/exchange { code }` → receives `{ githubToken, githubUsername }`
@@ -108,7 +111,7 @@ To run the application via Docker:
    - `AZURE_OPENAI_API_KEY`, `AZURE_OPENAI_ENDPOINT`, `AZURE_OPENAI_API_VERSION`, `AZURE_OPENAI_DEPLOYMENT`
    - `JWT_SECRET` (from Supabase dashboard)
    - `PORT` (defaults to 3000)
-   - `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET` *(optional — see GitHub OAuth Setup below)*
+   - `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET` _(optional — see GitHub OAuth Setup below)_
 
 4. **Run the application**
 
@@ -137,4 +140,4 @@ Special thanks to the following open-source resources that inspired or are inclu
 The following Agentic AI coding assistants provided support during the development process:
 
 - **AI Models:** Gemini 3.1 Pro, Claude Sonnet/Opus 4.6
-- **AI Agents/Environments:** Google Antigravity, Claude Code
+- **AI Agents/Environments:** Google Antigravity, Claude Code, Gemini CLI
