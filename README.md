@@ -2,7 +2,7 @@
 
 ## About
 
-webCV is a REST API backend for a portfolio website generator designed for IT professionals. It is being built as a university bachelor thesis deliverable and to be reused in the future as the backend for an engineering thesis.
+webCV REST API backend for a portfolio website generator designed for IT professionals. It is being built as a university bachelor thesis deliverable and to be reused in the future as the backend for an engineering thesis.
 
 The core philosophy behind webCV is **user independence** — there is no vendor lock-in, meaning users fully own and control their generated static sites.
 
