@@ -163,10 +163,14 @@ Storage calls use a **per-request client** scoped to the user's JWT (`clientForU
 ### RLS Setup
 Bucket policies live in `supabase/migrations/storage_rls_policies.sql` — **must be applied manually in the Supabase SQL Editor** when setting up a new environment. Without them, storage bucket access is unrestricted.
 
-Both buckets are **private** (`public = false`). The RLS SELECT policy restricts **direct authenticated reads** (e.g., `clientForUser(jwt).storage.download()`) to the owning user only.
+Both buckets are **private** (`public = false`).
 
-> [!IMPORTANT]
-> `supabaseAdmin.storage.createSignedUrl()` uses the service role key and **bypasses RLS**. The SELECT policy does **not** protect signed URL generation. The protection here is entirely application-level: `getSignedUrl()` is never exposed directly to user input — all paths reaching it come from either (a) a DB row already verified by an ownership check, or (b) a path computed server-side as `${userId}/...`. If that application-level guard were ever bypassed, the RLS policy would not save you.
+**INSERT / UPDATE / DELETE** — use `clientForUser(jwt)`, so Supabase evaluates RLS with the user's identity. These policies are a **genuine second layer**: even if the application-level path check (`path.startsWith(`${userId}/`)`) were somehow bypassed, Supabase would still reject the operation if the path folder doesn't match `auth.uid()`.
+
+**SELECT** — reads never go through `clientForUser`. Signed URL generation uses `supabaseAdmin` (service role), which bypasses RLS entirely. The SELECT RLS policy is therefore **defense-in-depth only** for this architecture:
+- Signed URL security is enforced solely at the application layer (`getSignedUrl()` is only called after an ownership-verified DB lookup or a server-computed path).
+- The frontend exposes no Supabase credentials (`VITE_API_URL` only), so direct client-side storage reads are not possible in practice.
+- The SELECT policy guards against out-of-band access (someone using the Supabase URL + anon key manually, or a future frontend change that introduces a Supabase client).
 
 ---
 

@@ -145,14 +145,17 @@ Use a global `HttpExceptionFilter` to ensure all errors follow this shape.
 
 ### Storage RLS Policies
 Bucket policies live in `supabase/migrations/storage_rls_policies.sql` and must be applied manually in the Supabase SQL Editor when setting up a new environment. They enforce:
-- `avatars` bucket — authenticated users can upload/update/delete only under their own `userId/` folder; **owner-only read** (no public access)
-- `screenshots` bucket — authenticated users can upload/delete only under their own `userId/` folder; **owner-only read** (no public access)
+- `avatars` bucket — authenticated users can upload/update/delete only under their own `userId/` folder; owner-only read
+- `screenshots` bucket — authenticated users can upload/delete only under their own `userId/` folder; owner-only read
 
 Both buckets are **private** (`public = false` at the bucket level — required for RLS SELECT policies to take effect).
 
-These policies are the **second layer** of ownership enforcement for storage. The first layer is application-level code in `StorageService`. Both layers must remain in sync.
+**INSERT / UPDATE / DELETE policies** are a **genuine second layer** of ownership enforcement. Uploads and deletes use `clientForUser(jwt)`, so Supabase evaluates RLS with the user's identity — if the application-level path check were bypassed, Supabase would still block the operation.
+
+**SELECT policy** is **defense-in-depth only**: signed URL generation uses `supabaseAdmin` (service role), which bypasses RLS. The frontend exposes no Supabase credentials, so direct client reads are not a realistic threat. The SELECT policy guards against out-of-band API access.
 
 **Signed URLs:** since buckets are private, the application uses `supabaseAdmin.storage.createSignedUrl()` (TTL: 3600 s) to generate short-lived URLs. `StorageService.getSignedUrl()` is a public method so `SitesService` can call it at read time. The `avatar_url` DB column has been dropped — `avatarUrl` in responses is always computed, never stored.
+
 
 ---
 
