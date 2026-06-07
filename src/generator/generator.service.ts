@@ -354,6 +354,11 @@ export class GeneratorService {
       path.join(__dirname, 'fonts', 'inter-latin-wght-normal.woff2'),
     );
 
+    const fontLicenseText = fs.readFileSync(
+      path.join(__dirname, 'templates', 'FONT-LICENSE.txt'),
+      'utf-8',
+    );
+
     return [
       { path: 'index.html', text: html, buffer: null },
       { path: 'style.css', text: css, buffer: null },
@@ -362,6 +367,11 @@ export class GeneratorService {
         path: 'assets/fonts/inter-latin-wght-normal.woff2',
         text: null,
         buffer: fontBuffer,
+      },
+      {
+        path: 'assets/fonts/FONT-LICENSE.txt',
+        text: fontLicenseText,
+        buffer: null,
       },
       ...imageFiles,
     ];
