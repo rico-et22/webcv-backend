@@ -35,6 +35,7 @@ To run this application properly, you must configure a Supabase project:
 1. **Database:** Run the SQL migrations (e.g. from `supabase/migrations/`) via the Supabase CLI or SQL Editor to create the necessary tables (`users`, `sites`).
 2. **Storage:** Create two public buckets named `avatars` and `screenshots`.
 3. **RLS Policies:** Apply the storage RLS policies located in `supabase/migrations/storage_rls_policies.sql` in the SQL Editor to ensure proper access control (enforcing user ownership of uploads).
+4. **Authentication:** Ensure correct redirect URL for frontend set in the "URL Configuration" settings (e.g. `http://localhost:5173/auth/callback`).
 
 ### SMTP Configuration (Resend)
 
