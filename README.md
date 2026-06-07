@@ -143,9 +143,14 @@ Special thanks to the following open-source resources that inspired or are inclu
 - **[Inter Font](https://rsms.me/inter/):** Used within the generated web portfolios. Inter is licensed under the SIL Open Font License (OFL).
 - **[Magic UI](https://magicui.design/):** The design and aesthetic of the generated portfolios take heavy inspiration from Magic UI's stunning modern templates.
 
-### AI Co-Development
+### Development Tools & AI Assistance
 
-The following Agentic AI coding assistants provided support during the development process:
+During the development process, modern programming environments with LLM-based
+coding assistants were utilized to automate boilerplate generation and assist
+with code refactoring and debugging:
 
+- **Environments (IDE/CLI):** Google Antigravity IDE, Claude Code, Gemini CLI
 - **AI Models:** Gemini 3.1 Pro, Claude Sonnet/Opus 4.6
-- **AI Agents/Environments:** Google Antigravity, Claude Code, Gemini CLI
+
+All architectural decisions, security design, testing, and integrations were
+performed by the author.
