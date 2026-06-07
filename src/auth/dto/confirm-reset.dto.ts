@@ -10,7 +10,7 @@ export class ConfirmResetDto {
   @IsString()
   accessToken: string;
 
-  @ApiProperty({ example: 'NewPass1', minLength: 8 })
+  @ApiProperty({ example: 'NewPass1!', minLength: 8 })
   @IsString()
   @MinLength(8)
   @Matches(/(?=.*[A-Z])/, {
@@ -18,6 +18,9 @@ export class ConfirmResetDto {
   })
   @Matches(/(?=.*[0-9])/, {
     message: 'newPassword must contain at least one number',
+  })
+  @Matches(/(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?])/, {
+    message: 'newPassword must contain at least one special character',
   })
   newPassword: string;
 }

@@ -6,7 +6,7 @@ export class RegisterDto {
   @IsEmail()
   email: string;
 
-  @ApiProperty({ example: 'StrongPass1', minLength: 8 })
+  @ApiProperty({ example: 'StrongPass1!', minLength: 8 })
   @IsString()
   @MinLength(8)
   @Matches(/(?=.*[A-Z])/, {
@@ -14,6 +14,9 @@ export class RegisterDto {
   })
   @Matches(/(?=.*[0-9])/, {
     message: 'password must contain at least one number',
+  })
+  @Matches(/(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?])/, {
+    message: 'password must contain at least one special character',
   })
   password: string;
 }
