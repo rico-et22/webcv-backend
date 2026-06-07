@@ -2,11 +2,13 @@
 
 ## About
 
-webCV REST API backend for a portfolio website generator designed for IT professionals. It is being built as a university bachelor thesis deliverable and to be reused in the future as the backend for an engineering thesis.
+webCV REST API backend for a portfolio website generator designed for IT professionals. It is built as an engineering thesis deliverable.
 
-The core philosophy behind webCV is **user independence** — there is no vendor lock-in, meaning users fully own and control their generated static sites.
+Users, after logging in, can fill out their data (basic info, experience, etc.), and then generate a working HTML+CSS+JS personal portfolio website.
 
-Additionally, webCV has an AI CV analyzer built-in, enabling rapid portfolio website creation without having to fill all the fields manually.
+Additionally, webCV has an AI CV analyzer built-in, enabling rapid portfolio website data autofill without having to fill all the fields manually.
+
+The core philosophy behind webCV is **user independence** — there is no vendor lock-in, meaning users fully own and control their generated static sites. There is an option to generate a ZIP package for any file hosting, or a one-click deploy to GitHub Pages (free static hosting).
 
 ## Tech Stack
 
