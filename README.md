@@ -79,12 +79,17 @@ The frontend OAuth flow works as follows:
 This application is fully containerized using a multi-stage `Dockerfile`.
 To run the application via Docker:
 
-1. Ensure your `.env` file is fully configured.
-2. Run the application using Docker Compose:
+1. Clone the repository.
+   ```bash
+   git clone <repository-url>
+   cd webcv-backend
+   ```
+2. Ensure your `.env` file is fully configured. (see `.env.example` and dev mode instructions below)
+3. Run the application using Docker Compose:
    ```bash
    docker-compose up --build -d
    ```
-   This will build the production image and spin up the stateless NestJS API on port `3000`.
+   This will build the production image and spin up the NestJS API on port `3000`.
 
 ### Local / Dev Mode Installation
 
