@@ -153,13 +153,31 @@ Required JSON structure (all fields optional — include only what you can confi
       throw err;
     }
 
-    const text = result.output?.[0]?.content?.[0]?.text?.trim() || '';
+    let text = (result.output_text ?? '').trim();
+    if (!text && Array.isArray(result.output)) {
+      for (const item of result.output) {
+        if (item.type === 'message' && Array.isArray(item.content)) {
+          for (const part of item.content) {
+            if (part.type === 'output_text' && part.text) {
+              text += part.text;
+            }
+          }
+        }
+      }
+      text = text.trim();
+    }
 
     // Strip markdown code fences if model wraps the JSON (e.g. ```json ... ```)
-    const cleaned = text
+    let cleaned = text
       .replace(/^```(?:json)?\s*/i, '')
       .replace(/\s*```$/, '')
       .trim();
+
+    const firstBrace = cleaned.indexOf('{');
+    const lastBrace = cleaned.lastIndexOf('}');
+    if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+      cleaned = cleaned.slice(firstBrace, lastBrace + 1);
+    }
 
     // 5. Parse AI response
     let parsed: AnalyzeCvResponseDto;
@@ -167,7 +185,7 @@ Required JSON structure (all fields optional — include only what you can confi
       parsed = JSON.parse(cleaned) as AnalyzeCvResponseDto;
     } catch {
       this.logger.error(
-        `Azure AI returned non-JSON response for user ${userId}: ${cleaned.slice(0, 200)}`,
+        `Azure AI returned non-JSON response for user ${userId}: ${cleaned.slice(0, 500) || '<empty>'} (raw output: ${JSON.stringify(result)?.slice(0, 1000)})`,
       );
       throw new BadRequestException(
         'Failed to parse CV analysis result. Please try again.',
