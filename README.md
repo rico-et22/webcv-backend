@@ -158,7 +158,7 @@ coding assistants were utilized to automate boilerplate generation and assist
 with code refactoring and debugging:
 
 - **Environments (IDE/CLI):** Google Antigravity IDE, Claude Code, Gemini CLI
-- **AI Models:** Gemini 3.1 Pro, Claude Sonnet/Opus 4.6
+- **AI Models:** Gemini 3.1 Pro/3.8 Flash, Claude Sonnet/Opus 4.6
 
 All architectural decisions, security design, testing, and integrations were
 performed by the author.
